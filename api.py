@@ -78,7 +78,7 @@ def ok():
     return make_json_response("Not allowed", "403")
 
 @app.route("/users")
-@app.route("/users/<username>", methods=["GET", "POST"])
+@app.route("/users/<username>", methods=["GET", "POST", "DELETE"])
 def users(username=None):
     if username is None:
         return jsonify(USERS_DB)
@@ -101,9 +101,14 @@ def users(username=None):
             USERS_DB [username] = { "groups": list(groups) }
             return jsonify({"message": "Content created or updated",
                 "links": { "updated_user" : "/users/%s" % username }})
+        if request.method == "DELETE":
+            if user is None:
+                return make_json_response("Unknown user", "404")
+            del USERS_DB[username]
+            return make_json_response("/users/%s deleted" % username, "204")
 
 @app.route("/groups")
-@app.route("/groups/<groupname>", methods=["GET", "POST"])
+@app.route("/groups/<groupname>", methods=["GET", "POST", "DELETE"])
 def groups(groupname=None):
     if groupname is None:
         return jsonify(GROUPS_DB)
@@ -125,6 +130,15 @@ def groups(groupname=None):
             GROUPS_DB [groupname] = permissions
             return jsonify({"message": "Content created or updated",
                 "links": { "updated" : "/groups/%s" % groupname }})
+        if request.method == "DELETE":
+            if group is None:
+                return make_json_response("Unknown group", "404")
+            del GROUPS_DB[groupname]
+            for username, groups in USERS_DB.iteritems():
+                if groupname in groups["groups"]:
+                    groups["groups"].remove(groupname)
+                    USERS_DB[username] = groups
+            return make_json_response("/groups/%s deleted" % groupname, "204")
 
 @app.route("/permissions")
 @app.route("/permissions/<permissionname>")
