@@ -2,7 +2,7 @@
 from urlparse import urlparse
 import urllib2
 import flask
-from flask import Flask, request, jsonify, abort
+from flask import Flask, request, jsonify
 from xdg.BaseDirectory import save_config_path, save_data_path
 from kyotocabinetdict import KyotoCabinetDict
 import permissions
@@ -33,6 +33,11 @@ def urlencode(s):
 def urldecode(s):
     return urllib2.unquote(s).decode('utf-8')
 
+def make_json_response(message, status="200"):
+    response = jsonify({"message": message})
+    response.status = status
+    return response
+
 @app.route("/")
 def ok():
     arg_method = request.args.get("method", "GET")
@@ -41,9 +46,7 @@ def ok():
     arg_url = request.args.get("url")
 
     if not arg_user or not arg_url:
-        response = jsonify({"Message": "missing user/url"})
-        response.status = "400"
-        return response
+        return make_json_response("missing user or url", "400")
 
     method = urldecode(arg_method)
     user = urldecode(arg_user)
@@ -72,9 +75,7 @@ def ok():
                         permission_params=permission_params):
                 return jsonify({})
 
-    response = jsonify({"Message": "User is not allowed to performed the request"})
-    response.status = "403"
-    return response
+    return make_json_response("Not allowed", "403")
 
 @app.route("/users")
 @app.route("/users/<username>", methods=["GET", "POST"])
@@ -85,21 +86,21 @@ def users(username=None):
         user = USERS_DB.get(username)
         if request.method == "GET":
             if user is None:
-                abort(404)
+                return make_json_response("Unknown user", "404")
             else:
                 return jsonify(user)
         if request.method == "POST":
             try:
                 groups = set(json.loads(request.form.get("groups", '["users"]')))
             except TypeError:
-                abort(400)
+                return make_json_response("Could not parse groups", "400")
             for group in groups:
                 if group not in GROUPS_DB:
-                    abort(400)
+                    GROUPS_DB [group] = {}
             groups.add("users")
             USERS_DB [username] = { "groups": list(groups) }
             return jsonify({"message": "Content created or updated",
-                "links": { "updated" : "/users/%s" % username }})
+                "links": { "updated_user" : "/users/%s" % username }})
 
 @app.route("/groups")
 @app.route("/groups/<groupname>", methods=["GET", "POST"])
@@ -110,17 +111,17 @@ def groups(groupname=None):
         group = GROUPS_DB.get(groupname)
         if request.method == "GET":
             if group is None:
-                flask.abort(404)
+                return make_json_response("Unknown group", "404")
             else:
                 return jsonify(group)
         if request.method == "POST":
             try:
                 permissions = dict(json.loads(request.form.get("permission", '{}')))
             except TypeError:
-                abort(400)
+                return make_json_response("Could not parse provided permissions", "400")
             for permission in permissions:
                 if permission not in permission_handler.list_permissions():
-                    abort(400)
+                    return make_json_response("Permission %s does not exist" % permission, "400")
             GROUPS_DB [groupname] = permissions
             return jsonify({"message": "Content created or updated",
                 "links": { "updated" : "/groups/%s" % groupname }})
@@ -133,7 +134,7 @@ def permissions(permissionname=None):
     else:
         permission = permission_handler.list_permissions().get(permissionname)
         if permission is None:
-            flask.abort(404)
+            return make_json_response("Unknown permission", "404")
         else:
             return jsonify({ "description" : permission })
 
