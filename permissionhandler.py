@@ -9,13 +9,13 @@ class PermissionHandler():
             return func
         return func_wrapper
 
-    def permission_checker(self, name=None):
+    def get(self, name=None):
         func = self.func_map.get(name, None)
         if func is None:
             raise Exception("Permission " + str(name) + " is unknown.")
         return func
 
-    def all_permissions(self):
+    def list_permissions(self):
         return dict(((key, self.func_map[key]["description"]) for key in
             self.func_map))
 

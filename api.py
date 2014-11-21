@@ -66,7 +66,7 @@ def ok():
     for group in groups:
         permissions = get_permissions(group)
         for permission, permission_params in permissions:
-            if permission_handler.permission_checker(permission)(scheme=scheme,
+            if permission_handler.get(permission)(scheme=scheme,
                         netloc=netloc, path=path, query_params=query_params,
                         query=query, hostname=hostname, port=port,
                         permission_params=permission_params):
@@ -78,7 +78,6 @@ def ok():
 
 
 
-@app.route("/add_user/<username>")
 def add_user(username):
     user = USERS_DB.get(username)
     if user:
@@ -86,19 +85,33 @@ def add_user(username):
     USERS_DB [username] = { "groups": [ "users", username] }
     return "Added user %s" % username
 
-@app.route("/users")
-def list_users():
-    return flask.jsonify({"users": USERS_DB.keys()})
-
-@app.route("/users/<username>")
 def get_groups(username):
     groups = USERS_DB.get(username)
     if groups is None:
         flask.abort(404)
     return jsonify(groups)
 
+@app.route("/users")
+def list_users():
+    return flask.jsonify({"users": USERS_DB.keys()})
+
+@app.route("/users/<username>", methods=['GET', 'POST'])
+def users(username):
+    if request.method == 'GET':
+        return get_groups(username)
+    if request.method == 'POST':
+        return add_user(username, request.form.get("groups", None))
+
 @app.route("/add_group/<groupname>")
 def add_group(groupname):
+    group = GROUPS_DB.get(groupname)
+    if group:
+        return "The group %s already exists!" % username
+    GROUPS_DB [group] = { "permissions": [] }
+    return "Added group %s" % groupname
+
+@app.route("/set_permissions/<groupname>")
+def set_permissions(groupname):
     group = GROUPS_DB.get(groupname)
     if group:
         return "The group %s already exists!" % username
@@ -110,10 +123,13 @@ def set_groups(username, grouplist):
     pass
 
 @app.route("/permissions")
-@app.route("/permissions/<group>")
+@app.route("/permissions/<groupname>", methods=['GET', 'POST'])
 def get_permissions(group=None):
-    return jsonify({"permissions": permission_handler.all_permissions()})
-
+    if group is None:
+        return jsonify(permission_handler.list_permissions())
+    else:
+        if request.method == 'GET':
+            return jsonify(GROUPS_DB[group])
 
 @app.route("/app_info")
 def app_info():
