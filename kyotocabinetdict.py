@@ -1,100 +1,172 @@
+from __future__ import with_statement
 from kyotocabinet import *
+import json
 import sys
 import os
 
-class KyotoCabinetDict():
+class DBOpen():
+    """
+    Allows to perform cleanly an operation on a KyotoCabinet database:
 
+        >>> with DBOpen("example.kch") as db:
+        >>>     print db.count()
+
+    This will open the database before the operation, and close it after.
+    """
     def __init__(self, path):
-        db_path = path
+        self.path = path
+        self.db = None
+
+    def __enter__(self):
         self.db = DB()
-        if not self.db.open(db_path, DB.OWRITER | DB.OCREATE):
-            raise OSError(str(self.db.error()))
+        if not self.db.open(self.path, DB.OWRITER | DB.OCREATE):
+            raise OSError(str(db.error()))
+        return self.db
 
-    def __len__(self):
-        return int(self.db.count())
-
-    def __getitem__(self, key):
-        value = self.db.get(key)
-        if value is None:
-            raise KeyError(str(self.db.error()))
-        return value
-
-    def __setitem__(self, key, value):
-        if not self.db.set(key, value):
-            raise ValueError(str(self.db.error()))
-
-    def __delitem__(self, key):
-        if not self.db.remove(key):
-            raise KeyError(str(self.db.error()))
-
-    def __iter__(self):
-        for item in self.iteritems():
-            yield item[0]
-
-    def __contains__(self, item):
-        return self.db.check(item) != -1
-
-    def __delete__(self):
+    def __exit__(self, type, value, traceback):
         if not self.db.close():
             raise OSError(str(self.db.error()))
 
-    def has_key(self, key):
-        return key in self
+class KyotoCabinetDict():
+    """
+    KyotoCabinet database with an (incomplete) interface of dictionary
+    """
+
+    def __init__(self, path):
+        self.path = path
+
+    def __len__(self):
+        with DBOpen(self.path) as db:
+            return int(db.count())
+
+    def __getitem__(self, key):
+        with DBOpen(self.path) as db:
+            db_key = json.dumps(key)
+            db_value = db.get(db_key)
+            if db_value is None:
+                raise KeyError(str(db.error()))
+            return json.loads(db_value)
+
+    def __setitem__(self, key, value):
+        with DBOpen(self.path) as db:
+            db_key = json.dumps(key)
+            db_value = json.dumps(value)
+            if not db.set(db_key, db_value):
+                raise ValueError(str(db.error()))
+
+    def __delitem__(self, key):
+        with DBOpen(self.path) as db:
+            db_key = json.dumps(key)
+            if not db.remove(db_key):
+                raise KeyError(str(db.error()))
+
+    def __contains__(self, key):
+        with DBOpen(self.path) as db:
+            db_key = json.dumps(key)
+            return db.check(db_key) != -1
 
     def iteritems(self):
-        cursor = self.db.cursor()
-        cursor.jump()
-        while True:
-            record = cursor.get(True)
-            if not record:
-                break
-            yield (record[0], record[1])
-        cursor.disable()
+        with DBOpen(self.path) as db:
+            cursor = db.cursor()
+            cursor.jump()
+            while True:
+                record = cursor.get(True)
+                if not record:
+                    break
+                db_key = record[0]
+                db_value = record[1]
+                key = json.loads(db_key)
+                value = json.loads(db_value)
+                yield (key, value)
+            cursor.disable()
 
-    def iterkeys(self):
+    def get(self, key, value=None):
+        with DBOpen(self.path) as db:
+            db_key = json.dumps(key)
+            db_value = db.get(db_key)
+            if db_value is None:
+                return value
+            else:
+                return json.loads(db_value)
+
+    def pop(self, key, default=None):
+        with DBOpen(self.path) as db:
+            db_key = json.dumps(key)
+            db_value = db.get(db_key)
+            if db_value is None:
+                if default is None:
+                    raise KeyError
+                else:
+                    return default
+            del self[key]
+            return json.loads(db_value)
+
+    def __iter__(self):
         for key, value in self.iteritems():
             yield key
+
+    def iterkeys(self):
+        return self.__iter__()
 
     def itervalues(self):
         for key, value in self.iteritems():
             yield value
 
+    def has_key(self, key):
+        return key in self
+
     def keys(self):
-        return [i for i in self.iterkeys()]
+        return list(self.iterkeys())
 
     def values(self):
-        return [i for i in self.itervalues()]
+        return list(self.itervalues())
+
+    def items(self):
+        return list(self.iteritems())
 
     def clear(self):
         for i in self.iterkeys():
             del self[i]
 
-    def get(self, key, value=None):
-        res = self.db.get(key)
-        if res is None:
-            return value
+    def viewitems(self):
+        raise NotImplementedError
 
-    def pop(self, key, default=None):
-        res = self.db.get(key)
-        if res is None:
-            if default is None:
-                raise KeyError
-            else:
-                return default
-        del self[key]
-        return res
+    def viewkeys(self):
+        raise NotImplementedError
 
-    def items(self):
-        return [i for i in self.iteritems()]
+    def viewvalues(self):
+        raise NotImplementedError
+
+    def copy(self):
+        raise NotImplementedError
+
+    @classmethod
+    def fromkeys(cls, seq, value=None):
+        raise NotImplementedError
+
+    def setdefault(self, key, default=None):
+        raise NotImplementedError
+
+    def update(self, other):
+        raise NotImplementedError
+
+def print_kyotocabinetdict(db):
+    print '{'
+    for k in db:
+        v = db[k]
+        print '    %s (%s): %s (%s)' % (k, type(k), v, type(v))
+    print '}'
 
 def test():
     print "create empty dict"
     db = KyotoCabinetDict("test.kch")
+    print_kyotocabinetdict(db)
     print "add a=b, c=d"
-    db["a"] = "b"
+    db["a"] = { "key": "value" }
     db["c"] = "d"
-    print "get db['a'], db['c']"
-    print db["a"]
+    print_kyotocabinetdict(db)
+    print "%s => %s" % ("a", db["a"])
+    print "%s => %s" % ("c", db["c"])
     print "length of db"
     print len(db)
     print "deleting key c, showing length"
@@ -122,8 +194,6 @@ def test():
     print "again, on keys and values with items"
     for k, v in db.items():
         print k, v
-
-
     print "getting unexisting key, or '<missing>'"
     print db.get("missing", '<missing>')
     print "clearing db, showing len"
