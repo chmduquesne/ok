@@ -13,13 +13,14 @@ class DBOpen():
 
     This will open the database before the operation, and close it after.
     """
-    def __init__(self, path):
+    def __init__(self, path, mode=DB.OREADER):
         self.path = path
         self.db = None
+        self.mode = mode
 
     def __enter__(self):
         self.db = DB()
-        if not self.db.open(self.path, DB.OWRITER | DB.OCREATE):
+        if not self.db.open(self.path, self.mode | DB.OCREATE):
             raise OSError(str(db.error()))
         return self.db
 
@@ -48,14 +49,14 @@ class KyotoCabinetDict():
             return json.loads(db_value)
 
     def __setitem__(self, key, value):
-        with DBOpen(self.path) as db:
+        with DBOpen(self.path, mode=DB.OWRITER) as db:
             db_key = json.dumps(key)
             db_value = json.dumps(value)
             if not db.set(db_key, db_value):
                 raise ValueError(str(db.error()))
 
     def __delitem__(self, key):
-        with DBOpen(self.path) as db:
+        with DBOpen(self.path, mode=DB.OWRITER) as db:
             db_key = json.dumps(key)
             if not db.remove(db_key):
                 raise KeyError(str(db.error()))
@@ -90,7 +91,7 @@ class KyotoCabinetDict():
                 return json.loads(db_value)
 
     def pop(self, key, default=None):
-        with DBOpen(self.path) as db:
+        with DBOpen(self.path, mode=DB.OWRITER) as db:
             db_key = json.dumps(key)
             db_value = db.get(db_key)
             if db_value is None:
