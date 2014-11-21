@@ -1,8 +1,12 @@
 #!env python2
 from urlparse import urlparse
-from flask import Flask, request, jsonify
+import urllib2
+import flask
+from flask import Flask, request, jsonify, abort
 from xdg.BaseDirectory import save_config_path, save_data_path
 from kyotocabinetdict import KyotoCabinetDict
+import permissions
+from permissionhandler import permission_handler
 import os
 import sys
 import json
@@ -12,43 +16,112 @@ app = Flask(__name__)
 # load the user configured functions
 APP_NAME = "ok"
 CONFIG_DIR = save_config_path(APP_NAME)
-DB_PATH = os.path.join(save_data_path(APP_NAME), "users.kch")
+USERS_DB_PATH = os.path.join(save_data_path(APP_NAME), "users.kch")
+GROUPS_DB_PATH = os.path.join(save_data_path(APP_NAME), "groups.kch")
 sys.path.append(CONFIG_DIR)
 try:
     import config
 except ImportError:
     pass
 
-DB = KyotoCabinetDict(DB_PATH)
-#DB = dict()
+USERS_DB = KyotoCabinetDict(USERS_DB_PATH)
+GROUPS_DB = KyotoCabinetDict(GROUPS_DB_PATH)
+
+def urlencode(s):
+    return urllib2.quote(s)
+
+def urldecode(s):
+    return urllib2.unquote(s).decode('utf-8')
 
 @app.route("/")
 def ok():
-    res = dict(request.args)
-    url = None
-    user = None
-    method = "GET"
-    res["data_home"] = save_data_path("ok")
-    res["config_home"] = save_config_path("ok")
-    return jsonify(res)
+    arg_method = request.args.get("method", "GET")
+    arg_groups = request.args.get("groups")
+    arg_user = request.args.get("user")
+    arg_url = request.args.get("url")
+
+    if not arg_user or not arg_url:
+        response = jsonify({"Message": "missing user/url"})
+        response.status = "400"
+        return response
+
+    method = urldecode(arg_method)
+    user = urldecode(arg_user)
+    url = urldecode(arg_url)
+    url_parts = urlparse(url)
+
+    scheme = url_parts.scheme
+    netloc = url_parts.netloc
+    path = url_parts.path
+    query_params = url_parts.params
+    query = url_parts.query
+    hostname = url_parts.hostname
+    port = url_parts.port
+
+    if arg_groups:
+        groups = json.loads(urldecode(arg_groups))
+    else:
+        groups = get_groups(user)
+
+    for group in groups:
+        permissions = get_permissions(group)
+        for permission, permission_params in permissions:
+            if permission_handler.permission_checker(permission)(scheme=scheme,
+                        netloc=netloc, path=path, query_params=query_params,
+                        query=query, hostname=hostname, port=port,
+                        permission_params=permission_params):
+                return jsonify({})
+
+    response = jsonify({"Message": "User is not allowed to performed the request"})
+    response.status = "403"
+    return response
+
+
 
 @app.route("/add_user/<username>")
 def add_user(username):
-    if DB.get(username, None):
-        return "The %s already exists!" % username
-    DB [username] = json.dumps({"groups": []})
+    user = USERS_DB.get(username)
+    if user:
+        return "The user %s already exists!" % username
+    USERS_DB [username] = { "groups": [ "users", username] }
     return "Added user %s" % username
+
+@app.route("/users")
+def list_users():
+    return flask.jsonify({"users": USERS_DB.keys()})
+
+@app.route("/users/<username>")
+def get_groups(username):
+    groups = USERS_DB.get(username)
+    if groups is None:
+        flask.abort(404)
+    return jsonify(groups)
 
 @app.route("/add_group/<groupname>")
 def add_group(groupname):
+    group = GROUPS_DB.get(groupname)
+    if group:
+        return "The group %s already exists!" % username
+    GROUPS_DB [group] = { "permissions": [] }
     return "Added group %s" % groupname
 
 @app.route("/set_groups/<username>/<grouplist>")
-def set_groups():
+def set_groups(username, grouplist):
     pass
 
-def get_groups(user):
-    return [ "users" ]
+@app.route("/permissions")
+@app.route("/permissions/<group>")
+def get_permissions(group=None):
+    return jsonify({"permissions": permission_handler.all_permissions()})
+
+
+@app.route("/app_info")
+def app_info():
+    res = dict()
+    res["USERS_DB_PATH"] = USERS_DB_PATH
+    res["GROUPS_DB_PATH"] = GROUPS_DB_PATH
+    res["CONFIG_FILE"] = os.path.join(CONFIG_DIR, "config.py")
+    return jsonify(res)
 
 if __name__ == "__main__":
     app.run()

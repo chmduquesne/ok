@@ -21,7 +21,7 @@ class DBOpen():
     def __enter__(self):
         self.db = DB()
         if not self.db.open(self.path, self.mode | DB.OCREATE):
-            raise OSError(str(db.error()))
+            raise OSError(str(self.db.error()))
         return self.db
 
     def __exit__(self, type, value, traceback):
@@ -35,6 +35,8 @@ class KyotoCabinetDict():
 
     def __init__(self, path):
         self.path = path
+        with DBOpen(self.path, mode=DB.OWRITER) as db:
+            pass
 
     def __len__(self):
         with DBOpen(self.path) as db:
