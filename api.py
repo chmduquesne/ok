@@ -76,60 +76,66 @@ def ok():
     response.status = "403"
     return response
 
-
-
-def add_user(username):
-    user = USERS_DB.get(username)
-    if user:
-        return "The user %s already exists!" % username
-    USERS_DB [username] = { "groups": [ "users", username] }
-    return "Added user %s" % username
-
-def get_groups(username):
-    groups = USERS_DB.get(username)
-    if groups is None:
-        flask.abort(404)
-    return jsonify(groups)
-
 @app.route("/users")
-def list_users():
-    return flask.jsonify({"users": USERS_DB.keys()})
+@app.route("/users/<username>", methods=["GET", "POST"])
+def users(username=None):
+    if username is None:
+        return jsonify(USERS_DB)
+    else:
+        user = USERS_DB.get(username)
+        if request.method == "GET":
+            if user is None:
+                abort(404)
+            else:
+                return jsonify(user)
+        if request.method == "POST":
+            try:
+                groups = set(json.loads(request.form.get("groups", '["users"]')))
+            except TypeError:
+                abort(400)
+            for group in groups:
+                if group not in GROUPS_DB:
+                    abort(400)
+            groups.add("users")
+            USERS_DB [username] = { "groups": list(groups) }
+            return jsonify({"message": "Content created or updated",
+                "links": { "updated" : "/users/%s" % username }})
 
-@app.route("/users/<username>", methods=['GET', 'POST'])
-def users(username):
-    if request.method == 'GET':
-        return get_groups(username)
-    if request.method == 'POST':
-        return add_user(username, request.form.get("groups", None))
-
-@app.route("/add_group/<groupname>")
-def add_group(groupname):
-    group = GROUPS_DB.get(groupname)
-    if group:
-        return "The group %s already exists!" % username
-    GROUPS_DB [group] = { "permissions": [] }
-    return "Added group %s" % groupname
-
-@app.route("/set_permissions/<groupname>")
-def set_permissions(groupname):
-    group = GROUPS_DB.get(groupname)
-    if group:
-        return "The group %s already exists!" % username
-    GROUPS_DB [group] = { "permissions": [] }
-    return "Added group %s" % groupname
-
-@app.route("/set_groups/<username>/<grouplist>")
-def set_groups(username, grouplist):
-    pass
+@app.route("/groups")
+@app.route("/groups/<groupname>", methods=["GET", "POST"])
+def groups(groupname=None):
+    if groupname is None:
+        return jsonify(GROUPS_DB)
+    else:
+        group = GROUPS_DB.get(groupname)
+        if request.method == "GET":
+            if group is None:
+                flask.abort(404)
+            else:
+                return jsonify(group)
+        if request.method == "POST":
+            try:
+                permissions = dict(json.loads(request.form.get("permission", '{}')))
+            except TypeError:
+                abort(400)
+            for permission in permissions:
+                if permission not in permission_handler.list_permissions():
+                    abort(400)
+            GROUPS_DB [groupname] = permissions
+            return jsonify({"message": "Content created or updated",
+                "links": { "updated" : "/groups/%s" % groupname }})
 
 @app.route("/permissions")
-@app.route("/permissions/<groupname>", methods=['GET', 'POST'])
-def get_permissions(group=None):
-    if group is None:
+@app.route("/permissions/<permissionname>")
+def permissions(permissionname=None):
+    if permissionname is None:
         return jsonify(permission_handler.list_permissions())
     else:
-        if request.method == 'GET':
-            return jsonify(GROUPS_DB[group])
+        permission = permission_handler.list_permissions().get(permissionname)
+        if permission is None:
+            flask.abort(404)
+        else:
+            return jsonify({ "description" : permission })
 
 @app.route("/app_info")
 def app_info():
