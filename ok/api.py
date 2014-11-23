@@ -5,8 +5,8 @@ import flask
 from flask import Flask, request, jsonify
 from xdg.BaseDirectory import save_config_path, save_data_path
 from kyotocabinetdict import KyotoCabinetDict
-import permissions
-from permissionhandler import permission_handler
+import conditions
+from conditionhandler import condition_handler
 import os
 import sys
 import json
@@ -19,6 +19,7 @@ APP_NAME = "ok"
 CONFIG_DIR = save_config_path(APP_NAME)
 USERS_DB_PATH = os.path.join(save_data_path(APP_NAME), "users.kch")
 GROUPS_DB_PATH = os.path.join(save_data_path(APP_NAME), "groups.kch")
+PERMISSIONS_DB_PATH = os.path.join(save_data_path(APP_NAME), "permissions.kch")
 sys.path.append(CONFIG_DIR)
 try:
     import config
@@ -27,6 +28,7 @@ except ImportError:
 
 USERS_DB = KyotoCabinetDict(USERS_DB_PATH)
 GROUPS_DB = KyotoCabinetDict(GROUPS_DB_PATH)
+PERMISSIONS_DB = KyotoCabinetDict(PERMISSIONS_DB_PATH)
 
 def urlencode(s):
     return urllib2.quote(s)
@@ -38,6 +40,9 @@ def make_json_response(message, status="200"):
     response = jsonify({"message": message})
     response.status = status
     return response
+
+def evaluate(permission, request):
+    return True
 
 @app.route("/ok/")
 def ok():
@@ -56,6 +61,8 @@ def ok():
         return make_json_response("Expected a user or some groups", "400")
     if user:
         user = urldecode(user)
+    if not USERS_DB.get(user):
+        return make_json_response("User %s does not exist" % user, "404")
     if groups:
         try:
             groups = urldecode(groups).split(",")
@@ -63,6 +70,10 @@ def ok():
             return make_json_response("Could not parse the groups", "400")
     else:
         groups = USERS_DB[user]["groups"]
+
+    for group in groups:
+        if not GROUPS_DB.get(group):
+            return make_json_response("Group %s does not exist" % group,"404")
 
     url_parts = urlparse(url)
     scheme = url_parts.scheme
@@ -73,14 +84,20 @@ def ok():
     hostname = url_parts.hostname
     port = url_parts.port
 
+    # A request is allowed if any of the groups has a condition that
+    # allows it.
+    # A condition allows a request if all the conditions of this
+    # condition return true.
     for group in groups:
-        permissions = get_permissions(group)
-        for permission, permission_params in permissions:
-            if permission_handler.get(permission)(scheme=scheme,
+        allowed = False
+        conditions = GROUPS_DB[group]
+        for condition, conditions_param in conditions:
+            permission_checker = condition_handler.get(condition)
+            if not condition_handler.get(condition)(scheme=scheme,
                         netloc=netloc, path=path, query_params=query_params,
                         query=query, hostname=hostname, port=port,
-                        permission_params=permission_params):
-                return jsonify({})
+                        conditions_param=conditions_param):
+                break
 
     return make_json_response("Not allowed", "403")
 
@@ -135,13 +152,24 @@ def groups(groupname=None):
                 return jsonify(group)
         if request.method == "POST":
             try:
-                permissions = dict(json.loads(request.form.get("permission", '{}')))
+                posted_permissions = request.form.get("conditions")
+                if not posted_permissions:
+                    conditions = {}
+                else:
+                    conditions = dict(
+                            json.loads(urldecode(posted_permissions))
+                            )
             except TypeError:
-                return make_json_response("Could not parse provided permissions", "400")
-            for permission in permissions:
-                if permission not in permission_handler.list_permissions():
-                    return make_json_response("Permission %s does not exist" % permission, "400")
-            GROUPS_DB [groupname] = permissions
+                return make_json_response(
+                        "Could not parse provided conditions", "400"
+                        )
+            for condition in conditions:
+                if condition not in condition_handler.all_conditions():
+                    return make_json_response(
+                            "condition %s does not exist" % condition,
+                            "400"
+                            )
+            GROUPS_DB [groupname] = conditions
             return jsonify({"message": "Content created or updated",
                 "links": { "updated" : "/groups/%s" % groupname }})
         if request.method == "DELETE":
@@ -155,16 +183,24 @@ def groups(groupname=None):
             return make_json_response("/groups/%s deleted" % groupname, "204")
 
 @app.route("/permissions/")
-@app.route("/permissions/<permissionname>")
-def permissions(permissionname=None):
-    if permissionname is None:
-        return jsonify(permission_handler.list_permissions())
+@app.route("/permissions/<permissionname>", methods=["GET", "POST", "DELETE"])
+def permission(permissionname=None):
+    if permissionname == None:
+        return jsonify(PERMISSIONS_DB)
     else:
-        permission = permission_handler.list_permissions().get(permissionname)
-        if permission is None:
-            return make_json_response("Unknown permission", "404")
+        permission = PERMISSIONS_DB.get(permissionname)
+
+@app.route("/conditions/")
+@app.route("/conditions/<conditionname>")
+def conditions(conditionname=None):
+    if conditionname is None:
+        return jsonify(condition_handler.all_conditions())
+    else:
+        condition = condition_handler.all_conditions().get(conditionname)
+        if condition is None:
+            return make_json_response("Unknown condition", "404")
         else:
-            return jsonify({ "description" : permission })
+            return jsonify({ "description" : condition })
 
 @app.route("/")
 @app.route("/app_info")
@@ -172,6 +208,7 @@ def app_info():
     res = dict()
     res["USERS_DB_PATH"] = USERS_DB_PATH
     res["GROUPS_DB_PATH"] = GROUPS_DB_PATH
+    res["PERMISSIONS_DB_PATH"] = PERMISSIONS_DB_PATH
     res["CONFIG_FILE"] = os.path.join(CONFIG_DIR, "config.py")
     res["links"] = "/help/"
     return jsonify(res)

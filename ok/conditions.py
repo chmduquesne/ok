@@ -1,11 +1,13 @@
-from permissionhandler import permission_handler
+from conditionhandler import condition_handler
 
-@permission_handler.register("admin", "Allows to do anything")
+@condition_handler.register("admin", "Allows to do anything")
 def admin_allows(scheme, netloc, path, query_params, query, hostname,
         port, permission_params):
     return True
 
-@permission_handler.register("basic_access", "")
+@condition_handler.register(
+    "path_allowed",
+    "Returns true if the path is allowed, false otherwise")
 def basic_access_allows(scheme, netloc, path, query_params, query,
         hostname, port, permission_params):
     return True

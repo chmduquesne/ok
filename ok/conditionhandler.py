@@ -1,4 +1,4 @@
-class PermissionHandler():
+class ConditionHandler():
     def __init__(self):
         self.func_map = {}
 
@@ -12,11 +12,11 @@ class PermissionHandler():
     def get(self, name=None):
         func = self.func_map.get(name, None)
         if func is None:
-            raise Exception("Permission " + str(name) + " is unknown.")
+            raise Exception("Condition " + str(name) + " is unknown.")
         return func
 
-    def list_permissions(self):
+    def all_conditions(self):
         return dict(((key, self.func_map[key]["description"]) for key in
             self.func_map))
 
-permission_handler = PermissionHandler()
+condition_handler = ConditionHandler()
