@@ -11,7 +11,7 @@ import os
 import sys
 import json
 
-app = Flask(__name__)
+from ok import app
 
 # load the user configured functions
 APP_NAME = "ok"

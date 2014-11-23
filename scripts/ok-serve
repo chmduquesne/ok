@@ -1,11 +1,11 @@
-#!env python
+#!env python2
 import os
 venv = os.getenv("PYTHON_VIRTUALENV", "venv") + "/bin/activate_this.py"
 execfile(venv, dict(__file__=venv))
 
 import argparse
 from werkzeug.contrib.profiler import ProfilerMiddleware
-from api import app
+from ok import app
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ok")
