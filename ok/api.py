@@ -34,11 +34,8 @@ def urlencode(s):
 def urldecode(s):
     return urllib2.unquote(s).decode('utf-8')
 
-def make_json_response(message, status="200", doc=None):
-    body = {"message": message}
-    if doc:
-        body["doc"] = doc
-    response = jsonify(body)
+def make_json_response(message, status="200"):
+    response = jsonify({"message": message})
     response.status = status
     return response
 
@@ -54,16 +51,16 @@ def ok():
     method = urldecode(request.args.get("method", "GET"))
 
     if not url:
-        return make_json_response("Please provide a url argument", "400")
+        return make_json_response("Expected a url argument", "400")
     if not (user or groups):
-        return make_json_response("Please provide a user or some groups", "400")
+        return make_json_response("Expected a user or some groups", "400")
     if user:
         user = urldecode(user)
     if groups:
         try:
-            groups = ','.split((urldecode(groups)))
+            groups = urldecode(groups).split(",")
         except TypeError:
-            return make_json_response("could not parse the groups", "400")
+            return make_json_response("Could not parse the groups", "400")
     else:
         groups = USERS_DB[user]["groups"]
 
@@ -104,7 +101,8 @@ def users(username=None):
                 return jsonify(user)
         if request.method == "POST":
             try:
-                groups = set(json.loads(request.form.get("groups", '["users"]')))
+                groups = request.form.get("groups", "users").split(",")
+                groups = set(groups.split(","))
             except TypeError:
                 return make_json_response("Could not parse groups", "400")
             for group in groups:
