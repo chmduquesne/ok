@@ -10,6 +10,7 @@ from permissionhandler import permission_handler
 import os
 import sys
 import json
+import traceback
 
 from ok import app
 
@@ -33,26 +34,40 @@ def urlencode(s):
 def urldecode(s):
     return urllib2.unquote(s).decode('utf-8')
 
-def make_json_response(message, status="200"):
-    response = jsonify({"message": message})
+def make_json_response(message, status="200", doc=None):
+    body = {"message": message}
+    if doc:
+        body["doc"] = doc
+    response = jsonify(body)
     response.status = status
     return response
 
-@app.route("/")
+@app.route("/ok/")
 def ok():
-    arg_method = request.args.get("method", "GET")
-    arg_groups = request.args.get("groups")
-    arg_user = request.args.get("user")
-    arg_url = request.args.get("url")
+    """
+    Expected format /ok/?url=<url>&user=tom&groups=g1,g2&method=GET
+    """
 
-    if not arg_user or not arg_url:
-        return make_json_response("missing user or url", "400")
+    url = request.args.get("url", None)
+    groups = request.args.get("groups", None)
+    user = request.args.get("user", None)
+    method = urldecode(request.args.get("method", "GET"))
 
-    method = urldecode(arg_method)
-    user = urldecode(arg_user)
-    url = urldecode(arg_url)
+    if not url:
+        return make_json_response("Please provide a url argument", "400")
+    if not (user or groups):
+        return make_json_response("Please provide a user or some groups", "400")
+    if user:
+        user = urldecode(user)
+    if groups:
+        try:
+            groups = ','.split((urldecode(groups)))
+        except TypeError:
+            return make_json_response("could not parse the groups", "400")
+    else:
+        groups = USERS_DB[user]["groups"]
+
     url_parts = urlparse(url)
-
     scheme = url_parts.scheme
     netloc = url_parts.netloc
     path = url_parts.path
@@ -60,11 +75,6 @@ def ok():
     query = url_parts.query
     hostname = url_parts.hostname
     port = url_parts.port
-
-    if arg_groups:
-        groups = json.loads(urldecode(arg_groups))
-    else:
-        groups = get_groups(user)
 
     for group in groups:
         permissions = get_permissions(group)
@@ -77,9 +87,12 @@ def ok():
 
     return make_json_response("Not allowed", "403")
 
-@app.route("/users")
+@app.route("/users/")
 @app.route("/users/<username>", methods=["GET", "POST", "DELETE"])
 def users(username=None):
+    """
+    Documentation for users
+    """
     if username is None:
         return jsonify(USERS_DB)
     else:
@@ -107,9 +120,12 @@ def users(username=None):
             del USERS_DB[username]
             return make_json_response("/users/%s deleted" % username, "204")
 
-@app.route("/groups")
+@app.route("/groups/")
 @app.route("/groups/<groupname>", methods=["GET", "POST", "DELETE"])
 def groups(groupname=None):
+    """
+    Documentation for groups
+    """
     if groupname is None:
         return jsonify(GROUPS_DB)
     else:
@@ -140,7 +156,7 @@ def groups(groupname=None):
                     USERS_DB[username] = groups
             return make_json_response("/groups/%s deleted" % groupname, "204")
 
-@app.route("/permissions")
+@app.route("/permissions/")
 @app.route("/permissions/<permissionname>")
 def permissions(permissionname=None):
     if permissionname is None:
@@ -152,13 +168,31 @@ def permissions(permissionname=None):
         else:
             return jsonify({ "description" : permission })
 
+@app.route("/")
 @app.route("/app_info")
 def app_info():
     res = dict()
     res["USERS_DB_PATH"] = USERS_DB_PATH
     res["GROUPS_DB_PATH"] = GROUPS_DB_PATH
     res["CONFIG_FILE"] = os.path.join(CONFIG_DIR, "config.py")
+    res["links"] = "/help/"
     return jsonify(res)
 
-if __name__ == "__main__":
-    app.run()
+@app.route("/help/")
+@app.route("/help/<endpoint>")
+def help(endpoint=None):
+    """Help for the developers"""
+    if endpoint is None:
+        all_endpoints = [ rule.endpoint for rule in
+                app.url_map.iter_rules() if rule.endpoint != "static" ]
+        links = dict()
+        for e in all_endpoints:
+            links[e] = "/help/%s" % e
+        return make_json_response({"links": links})
+    else:
+        func = app.view_functions.get(endpoint, None)
+    if not func:
+        return make_json_response("%s: unkown endpoint" % str(endpoint), "404")
+    if not func.__doc__:
+        return make_json_response("%s: no documentation" % str(endpoint), "404")
+    return func.__doc__
