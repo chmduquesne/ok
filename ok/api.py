@@ -41,7 +41,14 @@ def make_json_response(message, status="200"):
     response.status = status
     return response
 
-def evaluate(permission, request):
+def allows(permission, request):
+    conditions = PERMISSIONS_DB.get(permission)
+    if not conditions:
+        raise KeyError("%s: unkown permission" % permission)
+    for condition, condition_params in conditions:
+        check_condition = condition_handler.get(condition)
+        if not check_condition:
+            raise KeyError("%s: unknown condition name" % condition)
     return True
 
 @app.route("/ok/")
@@ -89,8 +96,10 @@ def ok():
     # A condition allows a request if all the conditions of this
     # condition return true.
     for group in groups:
-        allowed = False
-        conditions = GROUPS_DB[group]
+        permissions = GROUPS_DB[group]
+        for permission in permissions:
+            if allows(permission, request):
+                return make_json_response({})
         for condition, conditions_param in conditions:
             permission_checker = condition_handler.get(condition)
             if not condition_handler.get(condition)(scheme=scheme,
