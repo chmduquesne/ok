@@ -11,7 +11,7 @@ class ConditionEngine():
             return func
         return func_wrapper
 
-    def run(self, name=None):
+    def validates(self, name=None):
         func = self.func_map.get(name, None)
         if func is None:
             raise Exception("Condition " + str(name) + " is unknown.")

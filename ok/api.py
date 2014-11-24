@@ -54,7 +54,37 @@ def allows(permission, request):
 @app.route("/ok/")
 def ok():
     """
-    Expected format /ok/?url=<url>&user=tom&groups=g1,g2&method=GET
+    Summary:
+    This api call checks if the request is allowed or not.
+
+    Format:
+    /ok/?url=<url>&user=<user>&groups=<group-list>&method=<method>
+
+    Arguments:
+    - url (mandatory):
+    The full url that is being accessed
+    - method (optional):
+    The HTTP method used (defaults to GET)
+    - user (optional):
+    The user who attempts to access the url
+    - groups (optional)
+    The groups the user belong to, separated by commas (whithout
+    whitespaces)
+
+    Additional details:
+    All the arguments MUST be url-encoded. A user _or_ groups MUST be
+    provided. If both are provided, the method will assume these groups
+    without checking if the user belongs to them.
+
+    How it works:
+    - a user belongs to groups
+    - groups are granted permissions
+    - permissions are lists of conditions to be simultaneously satisfied
+      on the request.
+
+    There is no way to grant a single user specific rights: it has to be
+    done through a group. This is a design decision: if you want to give
+    special rights to a user, create a group specifically for this user.
     """
 
     url = request.args.get("url", None)
