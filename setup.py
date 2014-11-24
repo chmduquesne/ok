@@ -10,5 +10,7 @@ setup(
         "kyotocabinet >= 1.9",
         "pyxdg >= 0.25"
         ],
-    scripts=["ok-serve"]
+    scripts=["ok-serve"],
+    zip_safe=False,
+    include_package_data=True
 )
