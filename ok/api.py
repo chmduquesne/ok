@@ -41,9 +41,9 @@ def describe_user(user):
 def ok():
     """
     Description:
-    This api call checks whether the provided request is allowed or not.
+    This resource represents the fact that the described request is allowed or not.
 
-    Format:
+    How to query:
     /ok/?url=<url>&user=<user>&groups=<group-list>&http_method=<http_method>&post_parameters=<post_parameters>
 
     Arguments:
@@ -63,7 +63,7 @@ def ok():
     ignore the user argument.
 
     Returns:
-    - A 400 Error if the arguments were incorrectly provided
+    - A 400 Error if the request was incorrectly described
     - A 404 Error if the user or the groups do not exist
     - A 403 Error if the request is forbidden
     - A 200 Status if the request is valid
@@ -169,7 +169,18 @@ def ok():
 @app.route("/users/<username>", methods=["GET", "POST", "DELETE"])
 def users(username=None):
     """
-    Documentation for users
+    Description:
+    This resource represents the users
+
+    How to query:
+    GET /users
+    GET /users/<username>
+    POST /users/<username>
+    DELETE /users/<username>
+
+    Returns:
+
+    Additional details:
     """
     if username is None:
         return flask.jsonify(USERS_DB)
@@ -203,7 +214,18 @@ def users(username=None):
 @app.route("/groups/<groupname>", methods=["GET", "POST", "DELETE"])
 def groups(groupname=None):
     """
-    Documentation for groups
+    Description:
+    This resource represents the groups
+
+    How to query:
+    GET /groups
+    GET /groups/<groupname>
+    POST /groups/<groupname>
+    DELETE /GROUPS/<groupname>
+
+    Returns:
+
+    Additional details:
     """
     if groupname is None:
         return flask.jsonify(GROUPS_DB)
@@ -249,6 +271,18 @@ def groups(groupname=None):
 @app.route("/restrictions/")
 @app.route("/restrictions/<restrictionname>")
 def restrictions(restrictionname=None):
+    """
+    Description:
+    This resource represents the restrictions apliable to requests
+
+    How to query:
+    GET /restrictions
+    GET /restrictions/<restrictionname>
+
+    Returns:
+
+    Additional details:
+    """
     if restrictionname is None:
         return flask.jsonify(restrictions_manager.all())
     else:
