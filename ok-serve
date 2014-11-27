@@ -14,15 +14,15 @@ if __name__ == "__main__":
         default=False
         )
     parser.add_argument(
-        '-p', '--port', action='store', type=int, help='port number',
+        "-p", "--port", action="store", type=int, help="port number",
         default=8080
         )
     parser.add_argument(
-        '-o', '--profile', action='store_true', help='do profiling',
+        "-o", "--profile", action="store_true", help="do profiling",
         default=False
         )
     parser.add_argument(
-        '-t', '--test', action='store_true', help='launch the test suite',
+        "-t", "--test", action="store_true", help="launch the test suite",
         default=False
         )
     args = parser.parse_args()
@@ -30,10 +30,10 @@ if __name__ == "__main__":
     if args.test:
         import ok
         import unittest
-        unittest.main(module='ok.tests', argv=['ok-serve'], verbosity=2)
+        unittest.main(module="ok.tests", argv=["ok-serve"], verbosity=2)
 
     if args.profile:
-        app.config['PROFILE'] = True
+        app.config["PROFILE"] = True
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
 
     app.run(debug=args.debug, host="127.0.0.1", port=args.port)

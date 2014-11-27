@@ -16,13 +16,17 @@ from ok import app
 # load the user configured functions
 APP_NAME = "ok"
 CONFIG_DIR = xdg.BaseDirectory.save_config_path(APP_NAME)
-USERS_DB_PATH = os.path.join(xdg.BaseDirectory.save_data_path(APP_NAME), "users.kch")
-GROUPS_FILE = os.path.join(xdg.BaseDirectory.save_data_path(APP_NAME), "groups.json")
 sys.path.append(CONFIG_DIR)
 try:
     import config
 except ImportError:
     pass
+
+DATA_DIR = xdg.BaseDirectory.save_data_path(APP_NAME)
+USERS_DB_PATH = os.path.join(DATA_DIR, "users.kch")
+USERS_DB = KyotoCabinetDict(USERS_DB_PATH)
+GROUPS_FILE = os.path.join(CONFIG_DIR, "groups.json")
+GROUPS = { "users" : {} }
 
 def save_groups():
     """
@@ -31,8 +35,6 @@ def save_groups():
     with open(GROUPS_FILE, "wb") as f:
         json.dump(GROUPS, indent=4, fp=f)
 
-USERS_DB = KyotoCabinetDict(USERS_DB_PATH)
-GROUPS = { "users" : {} }
 # load the groups and their restrictions
 if os.path.exists(GROUPS_FILE):
     with open(GROUPS_FILE) as f:
@@ -58,7 +60,7 @@ def json_response(status, body={}):
             429: "Too many requests",
             500: "Internal error"
             }
-    if isinstance(body, str):
+    if not isinstance(body, dict):
         body = { "message": body }
     body["status"] = status_message[status]
     response = flask.jsonify(body)
@@ -72,7 +74,8 @@ def describe_user(user):
 def ok():
     """
     Description:
-    This resource represents the fact that the described request is allowed or not.
+    This resource represents the fact that the described request is
+    allowed or not.
 
     How to query:
     GET /ok/?url=<url>&user=<user>&groups=<group-list>&http_method=<http_method>&post_parameters=<post_parameters>
@@ -179,13 +182,16 @@ def ok():
         for path_pattern, restriction_list in restrictions.iteritems():
             if re.match(path_pattern, path):
                 match_found = True
-                for restriction_name, restriction_params in restriction_list:
+                for restrictionname, restriction_params in restriction_list:
                     try:
-                        rule = restrictions_manager.get(restriction_name)
+                        rule = restrictions_manager.get(restrictionname)
                     except KeyError:
-                        return json_response(500, "%s: unknown restriction" % restriction_name)
+                        return json_response(
+                                500,
+                                "%s: unknown restriction" % restrictionname
+                                )
                     if not rule.applies(
-                            group_name=group,
+                            groupname=group,
                             http_scheme=http_scheme,
                             http_netloc=http_netloc,
                             http_path=http_path,
@@ -200,7 +206,7 @@ def ok():
                             restriction_params=restriction_params
                             ):
                         return json_response(403, "Restriction %s on %s"
-                                % (restriction_name, path_pattern))
+                                % (restrictionname, path_pattern))
         # We need to find at least one matching path
         if match_found:
             return json_response(200, describe_user())
@@ -209,7 +215,7 @@ def ok():
 
 @app.route("/users/")
 @app.route("/users/<username>", methods=["GET", "POST", "DELETE", "PUT"])
-def users(user_name=None):
+def users(username=None):
     """
     Description:
     This resource represents the users
@@ -226,10 +232,10 @@ def users(user_name=None):
     Additional details:
     """
     # list all users
-    if user_name is None:
+    if username is None:
         return flask.jsonify(USERS_DB)
     else:
-        user = USERS_DB.get(user_name)
+        user = USERS_DB.get(username)
         if flask.request.method == "GET":
             if user is None:
                 return json_response(404, "Unknown user")
@@ -237,7 +243,7 @@ def users(user_name=None):
                 return flask.jsonify(user)
         if flask.request.method in ("POST", "PUT"):
             try:
-                groups = flask.request.form.get("groups", "users").split(",")
+                groups = flask.request.form.get("groups", "users")
                 groups = set(groups.split(","))
             except TypeError:
                 return json_response(400, "Could not parse groups")
@@ -248,17 +254,17 @@ def users(user_name=None):
                     save_groups()
             # any user is part of the group "users"
             groups.add("users")
-            USERS_DB [user_name] = { "groups": list(groups) }
+            USERS_DB [username] = { "groups": list(groups) }
             return json_response(200, "User created or updated")
         if flask.request.method == "DELETE":
             if user is None:
-                return json_response(404, "%s: unknown user" % user_name)
-            del USERS_DB[user_name]
-            return json_response(204, "/users/%s deleted" % user_name)
+                return json_response(404, "%s: unknown user" % username)
+            del USERS_DB[username]
+            return json_response(204, "/users/%s deleted" % username)
 
 @app.route("/groups/")
 @app.route("/groups/<groupname>", methods=["GET", "POST", "DELETE", "PUT"])
-def groups(group_name=None):
+def groups(groupname=None):
     """
     Description:
     This resource represents the groups
@@ -274,13 +280,13 @@ def groups(group_name=None):
 
     Additional details:
     """
-    if group_name is None:
+    if groupname is None:
         return flask.jsonify(GROUPS)
     else:
-        group = GROUPS.get(group_name)
+        group = GROUPS.get(groupname)
         if flask.request.method == "GET":
             if group is None:
-                return json_response(404, "%s: unknown group" % group_name)
+                return json_response(404, "%s: unknown group" % groupname)
             else:
                 return flask.jsonify(group)
         if flask.request.method in ("POST", "PUT"):
@@ -298,31 +304,31 @@ def groups(group_name=None):
                         posted_restrictions
                         )
             for path_pattern, restriction_list in restrictions.iteritems():
-                for restriction_name, restriction_params in restriction_list:
-                    if restriction_name not in restrictions_manager.all():
+                for restrictionname, restriction_params in restriction_list:
+                    if restrictionname not in restrictions_manager.all():
                         return json_response(
                                 404, "%s: unknown restriction" %
-                                restriction_name
+                                restrictionname
                                 )
-            GROUPS[group_name] = restrictions
+            GROUPS[groupname] = restrictions
             save_groups()
             return json_response(
-                    200, "Created or updated the group %s" % group_name
+                    200, "Created or updated the group %s" % groupname
                     )
         if flask.request.method == "DELETE":
             if group is None:
-                return json_response(404, "%s: unknown group" % group_name)
-            del GROUPS[group_name]
+                return json_response(404, "%s: unknown group" % groupname)
+            del GROUPS[groupname]
             save_groups()
-            for user_name, groups in USERS_DB.iteritems():
-                if group_name in groups["groups"]:
-                    groups["groups"].remove(group_name)
-                    USERS_DB[user_name] = groups
-            return json_response(204, "/groups/%s deleted" % group_name)
+            for username, groups in USERS_DB.iteritems():
+                if groupname in groups["groups"]:
+                    groups["groups"].remove(groupname)
+                    USERS_DB[username] = groups
+            return json_response(204, "/groups/%s deleted" % groupname)
 
 @app.route("/restrictions/")
 @app.route("/restrictions/<restrictionname>")
-def restrictions(restriction_name=None):
+def restrictions(restrictionname=None):
     """
     Description:
     This resource represents the restrictions apliable to requests
@@ -335,13 +341,13 @@ def restrictions(restriction_name=None):
 
     Additional details:
     """
-    if restriction_name is None:
+    if restrictionname is None:
         return flask.jsonify(restrictions_manager.all())
     else:
-        description = restrictions_manager.all().get(restriction_name)
+        description = restrictions_manager.all().get(restrictionname)
         if description is None:
             return json_response(
-                    404, "%s: unknown restriction" % restriction_name
+                    404, "%s: unknown restriction" % restrictionname
                     )
         else:
             return json_response(200, { "description" : description })
