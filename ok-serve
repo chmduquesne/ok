@@ -21,7 +21,17 @@ if __name__ == "__main__":
         '-o', '--profile', action='store_true', help='do profiling',
         default=False
         )
+    parser.add_argument(
+        '-t', '--test', action='store_true', help='launch the test suite',
+        default=False
+        )
     args = parser.parse_args()
+
+    if args.test:
+        import ok
+        import unittest
+        unittest.main(module='ok.tests', argv=['ok-serve'], verbosity=2)
+
     if args.profile:
         app.config['PROFILE'] = True
         app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
