@@ -15,6 +15,28 @@ class OkStatusTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_root_status(self):
+        response = self.app.get("/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_ok_no_arg(self):
+        response = self.app.get("/ok/")
+        body = json.loads(response.data)
+        self.assertEqual(body["message"], "Expected a url argument")
+        self.assertEqual(response.status_code, 400)
+
+    def test_users_status(self):
+        response = self.app.get("/users/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_groups_status(self):
+        response = self.app.get("/groups/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_restrictions_status(self):
+        response = self.app.get("/restrictions/")
+        self.assertEqual(response.status_code, 200)
+
     def test_post_put_get_delete_user(self):
         # create user john, part of group_1 and group_2
         response = self.app.post("/users/john",data={"groups":
@@ -45,24 +67,6 @@ class OkStatusTestCase(unittest.TestCase):
         response = self.app.get("/users/john")
         self.assertEqual(response.status_code, 404)
 
-    def test_root_status(self):
-        response = self.app.get("/")
-        self.assertEqual(response.status_code, 200)
-
-    def test_ok_no_arg(self):
-        response = self.app.get("/ok/")
-        body = json.loads(response.data)
-        self.assertEqual(body["message"], "Expected a url argument")
-        self.assertEqual(response.status_code, 400)
-
-    def test_users_status(self):
-        response = self.app.get("/users/")
-        self.assertEqual(response.status_code, 200)
-
-    def test_groups_status(self):
-        response = self.app.get("/groups/")
-        self.assertEqual(response.status_code, 200)
-
-    def test_restrictions_status(self):
-        response = self.app.get("/restrictions/")
+    def test_ok(self):
+        response = self.app.get("/ok/?url=%2F&groups=admin")
         self.assertEqual(response.status_code, 200)

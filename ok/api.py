@@ -67,7 +67,7 @@ def json_response(status, body={}):
     response.status = str(status)
     return response
 
-def describe_user(user):
+def describe_rights(groups):
     return {}
 
 @app.route("/ok/")
@@ -133,7 +133,7 @@ def ok():
         return json_response(400, "Expected a user or some groups")
     if user:
         user = urldecode(user)
-    if not USERS_DB.get(user):
+    if user and not USERS_DB.get(user):
         return json_response(400, "User %s does not exist" % user)
     if groups:
         try:
@@ -180,7 +180,7 @@ def ok():
         match_found = False
         # All the matching patterns must return True if the path matches
         for path_pattern, restriction_list in restrictions.iteritems():
-            if re.match(path_pattern, path):
+            if re.match(path_pattern, http_path):
                 match_found = True
                 for restrictionname, restriction_params in restriction_list:
                     try:
@@ -209,7 +209,7 @@ def ok():
                                 % (restrictionname, path_pattern))
         # We need to find at least one matching path
         if match_found:
-            return json_response(200, describe_user())
+            return json_response(200, describe_rights(groups))
 
     return json_response(403, "Not allowed (no matching path on any group)")
 

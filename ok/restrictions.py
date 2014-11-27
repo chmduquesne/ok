@@ -19,7 +19,7 @@ class RestrictionsManager():
         return func_wrapper
 
     def get(self, name):
-        func = self.func_map.get[name]
+        func = self.func_map[name]["function"]
         return Rule(func)
 
     def all(self):
