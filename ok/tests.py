@@ -2,6 +2,8 @@ import ok
 import os
 import unittest
 import json
+import tempfile
+import shutil
 
 # Available methods on responses objects: see
 # http://werkzeug.pocoo.org/docs/0.9/quickstart/#responses
@@ -10,10 +12,15 @@ class OkStatusTestCase(unittest.TestCase):
 
     def setUp(self):
         ok.app.config["TESTING"] = True
+        self.config_dir = tempfile.mkdtemp()
+        self.data_dir = tempfile.mkdtemp()
+        os.environ["XDG_CONFIG_DIR"] = self.config_dir
+        os.environ["XDG_DATA_DIR"] = self.data_dir
         self.app = ok.app.test_client()
 
     def tearDown(self):
-        pass
+        shutil.rmtree(self.config_dir)
+        shutil.rmtree(self.data_dir)
 
     def test_root_status(self):
         response = self.app.get("/")
