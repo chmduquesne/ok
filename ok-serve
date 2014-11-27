@@ -7,13 +7,6 @@ import argparse
 from werkzeug.contrib.profiler import ProfilerMiddleware
 from ok import app
 
-config_dir = os.getenv("CONFIG_DIR")
-data_dir = os.getenv("DATA_DIR")
-if config_dir:
-    ok.app.config["CONFIG_DIR"] = config_dir
-if data_dir:
-    ok.app.config["DATA_DIR"] = data_dir
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ok")
     parser.add_argument(

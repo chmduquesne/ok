@@ -15,12 +15,8 @@ from ok import app
 
 # load the user configured functions
 APP_NAME = "ok"
-CONFIG_DIR = app.config.get(
-        "CONFIG_DIR", xdg.BaseDirectory.save_config_path(APP_NAME)
-        )
-DATA_DIR = app.config.get(
-        "DATA_DIR", xdg.BaseDirectory.save_data_path(APP_NAME)
-        )
+CONFIG_DIR = xdg.BaseDirectory.save_config_path(APP_NAME)
+DATA_DIR = xdg.BaseDirectory.save_data_path(APP_NAME)
 sys.path.append(CONFIG_DIR)
 try:
     import config
