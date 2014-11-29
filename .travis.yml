@@ -1,6 +1,7 @@
 python:
     - 2.7
 before_script:
+    - sudo pip install virtualenv
     - virtualenv venv
     - venv/bin/pip install -r requirements.txt
 script:
