@@ -116,33 +116,36 @@ class KyotoCabinetDict(dict):
         return key in self
 
 class JsonDict(dict):
-    def __init__(self, path):
-        self.path = path
+
+    def save_to_disk(self):
         with open(self.path, "wb") as f:
             json.dump(self, indent=4, fp=f)
 
+    def __init__(self, path):
+        self.path = path
+        if not os.path.exists(path):
+            self.save_to_disk()
+        with open(self.path) as f:
+            self.update(json.load(f))
+
     def __setitem__(self, *args, **kwargs):
         res = super(JsonDict, self).__setitem__(*args, **kwargs)
-        with open(self.path, "wb") as f:
-            json.dump(self, indent=4, fp=f)
+        self.save_to_disk()
         return res
 
     def __delitem__(self, *args, **kwargs):
         res = super(JsonDict, self).__delitem__(*args, **kwargs)
-        with open(self.path, "wb") as f:
-            json.dump(self, indent=4, fp=f)
+        self.save_to_disk()
         return res
 
     def pop(self, *args, **kwargs):
         res = super(JsonDict, self).pop(*args, **kwargs)
-        with open(self.path, "wb") as f:
-            json.dump(self, indent=4, fp=f)
+        self.save_to_disk()
         return res
 
     def clear(self, *args, **kwargs):
         res = super(JsonDict, self).clear(*args, **kwargs)
-        with open(self.path, "wb") as f:
-            json.dump(self, indent=4, fp=f)
+        self.save_to_disk()
         return res
 
 def print_kyotocabinetdict(db):

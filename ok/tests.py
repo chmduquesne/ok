@@ -243,6 +243,7 @@ class JsonDictTestCase(DictionaryTestCase, unittest.TestCase):
     def setUp(self):
         fd, name = tempfile.mkstemp(suffix='.json')
         os.close(fd)
+        os.unlink(name)
         self.dict_path = name
         self.dictionary = ok.serializeddicts.JsonDict(self.dict_path)
 
@@ -257,6 +258,7 @@ class KyotoCabinetDictTestCase(DictionaryTestCase, unittest.TestCase):
     def setUp(self):
         fd, name = tempfile.mkstemp(suffix='.kch')
         os.close(fd)
+        os.unlink(name)
         self.dict_path = name
         self.dictionary = ok.serializeddicts.KyotoCabinetDict(self.dict_path)
 
