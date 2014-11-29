@@ -13,37 +13,38 @@ import serializeddicts
 from restrictions import restrictions_manager
 from ok import app
 
-# load the user configured functions
 APP_NAME = "ok"
-CONFIG_DIR = xdg.BaseDirectory.save_config_path(APP_NAME)
-DATA_DIR = xdg.BaseDirectory.save_data_path(APP_NAME)
-sys.path.append(CONFIG_DIR)
+XDG_CONFIG_DIR = xdg.BaseDirectory.save_config_path(APP_NAME)
+XDG_DATA_DIR = xdg.BaseDirectory.save_data_path(APP_NAME)
+
+app.config.update(dict(
+    CONFIG_DIR=XDG_CONFIG_DIR,
+    USERS_DB=os.path.join(XDG_DATA_DIR, "users.kch"),
+    GROUPS_DB=os.path.join(XDG_CONFIG_DIR, "groups.json")
+    ))
+
+# load the user configured functions
+sys.path.append(app.config["CONFIG_DIR"])
 try:
     import config
 except ImportError:
     pass
 
-USERS_DB_PATH = os.path.join(DATA_DIR, "users.kch")
-USERS_DB = serializeddicts.KyotoCabinetDict(USERS_DB_PATH)
-GROUPS_FILE = os.path.join(CONFIG_DIR, "groups.json")
-GROUPS = { "users" : {} }
+def get_groups_db():
+    if not hasattr(flask.g, "groups_db"):
+        first_run = not os.path.exists(app.config["GROUPS_DB"])
+        groups_db = serializeddicts.JsonDict(app.config["GROUPS_DB"])
+        if first_run:
+            groups_db["users"] = {}
+        flask.g.groups_db = groups_db
+    flask.g.groups_db["admin"] = { "/.*$" : [ [ "unrestricted", None ] ] }
+    return flask.g.groups_db
 
-def save_groups():
-    """
-    saves the groups in the dedicated file
-    """
-    with open(GROUPS_FILE, "wb") as f:
-        json.dump(GROUPS, indent=4, fp=f)
-
-# load the groups and their restrictions
-if os.path.exists(GROUPS_FILE):
-    with open(GROUPS_FILE) as f:
-        GROUPS = json.load(f)
-else:
-    # create the file if it does not exist, reset the admin group to avoid
-    # problems
-    GROUPS["admin"] = { "/.*$" : [ [ "unrestricted", None ] ] }
-    save_groups()
+def get_users_db():
+    if not hasattr(flask.g, "users_db"):
+        flask.g.users_db = \
+                serializeddicts.KyotoCabinetDict(app.config["USERS_DB"])
+    return flask.g.users_db
 
 def urldecode(s):
     return urllib2.unquote(s).decode('utf-8')
@@ -120,6 +121,8 @@ def ok():
     The workaround, if you want to give special rights to a user, create a
     group specifically for this user.
     """
+    users_db = get_users_db()
+    groups_db = get_groups_db()
 
     url = flask.request.args.get("url", None)
     groups = flask.request.args.get("groups", None)
@@ -133,7 +136,7 @@ def ok():
         return json_response(400, "Expected a user or some groups")
     if user:
         user = urldecode(user)
-    if user and not USERS_DB.get(user):
+    if user and not users_db.get(user):
         return json_response(400, "User %s does not exist" % user)
     if groups:
         try:
@@ -141,7 +144,7 @@ def ok():
         except TypeError:
             return json_response(400, "Could not parse the groups")
     else:
-        groups = USERS_DB[user]["groups"]
+        groups = users_db[user]["groups"]
     if post_parameters:
         try:
             post_parameters = urllib.parse_qs(post_parameters)
@@ -151,7 +154,7 @@ def ok():
                     "Could not parse post_parameters %s" % post_parameters
                     )
     for group in groups:
-        if not GROUPS.get(group):
+        if not groups_db.get(group):
             return json_response(404, "Group %s does not exist" % group)
 
     url_parts = urlparse.urlsplit(url)
@@ -176,7 +179,7 @@ def ok():
 
     # For each groups, we go through all the path patterns.
     for group in groups:
-        restrictions = GROUPS[group]
+        restrictions = groups_db[group]
         match_found = False
         # All the matching patterns must return True if the path matches
         for path_pattern, restriction_list in restrictions.iteritems():
@@ -232,10 +235,11 @@ def users(username=None):
     Additional details:
     """
     # list all users
+    users_db = get_users_db()
     if username is None:
-        return flask.jsonify(USERS_DB)
+        return flask.jsonify(users_db)
     else:
-        user = USERS_DB.get(username)
+        user = users_db.get(username)
         if flask.request.method == "GET":
             if user is None:
                 return json_response(404, "Unknown user")
@@ -248,18 +252,18 @@ def users(username=None):
             except TypeError:
                 return json_response(400, "Could not parse groups")
             # create the group if it does not exist
+            groups_db = get_groups_db()
             for group in groups:
-                if group not in GROUPS:
-                    GROUPS[group] = {}
-                    save_groups()
+                if group not in groups_db:
+                    groups_db[group] = {}
             # any user is part of the group "users"
             groups.add("users")
-            USERS_DB [username] = { "groups": list(groups) }
+            users_db[username] = { "groups": list(groups) }
             return json_response(200, "User created or updated")
         if flask.request.method == "DELETE":
             if user is None:
                 return json_response(404, "%s: unknown user" % username)
-            del USERS_DB[username]
+            del users_db[username]
             return json_response(204, "/users/%s deleted" % username)
 
 @app.route("/groups/")
@@ -274,16 +278,17 @@ def groups(groupname=None):
     GET /groups/<groupname>
     POST /groups/<groupname>
     PUT /groups/<groupname>
-    DELETE /GROUPS/<groupname>
+    DELETE /groups/<groupname>
 
     Returns:
 
     Additional details:
     """
+    groups_db = get_groups_db()
     if groupname is None:
-        return flask.jsonify(GROUPS)
+        return flask.jsonify(groups_db)
     else:
-        group = GROUPS.get(groupname)
+        group = groups_db.get(groupname)
         if flask.request.method == "GET":
             if group is None:
                 return json_response(404, "%s: unknown group" % groupname)
@@ -310,20 +315,19 @@ def groups(groupname=None):
                                 404, "%s: unknown restriction" %
                                 restrictionname
                                 )
-            GROUPS[groupname] = restrictions
-            save_groups()
+            groups_db[groupname] = restrictions
             return json_response(
                     200, "Created or updated the group %s" % groupname
                     )
         if flask.request.method == "DELETE":
             if group is None:
                 return json_response(404, "%s: unknown group" % groupname)
-            del GROUPS[groupname]
-            save_groups()
-            for username, groups in USERS_DB.iteritems():
+            del groups_db[groupname]
+            users_db = get_users_db()
+            for username, groups in users_db.iteritems():
                 if groupname in groups["groups"]:
                     groups["groups"].remove(groupname)
-                    USERS_DB[username] = groups
+                    users_db[username] = groups
             return json_response(204, "/groups/%s deleted" % groupname)
 
 @app.route("/restrictions/")
@@ -356,9 +360,9 @@ def restrictions(restrictionname=None):
 @app.route("/app_info")
 def app_info():
     res = dict()
-    res["USERS_DB_PATH"] = USERS_DB_PATH
-    res["GROUPS_FILE"] = GROUPS_FILE
-    res["CONFIG_FILE"] = os.path.join(CONFIG_DIR, "config.py")
+    res["USERS_DB"] = app.config["USERS_DB"]
+    res["GROUPS_DB"] = app.config["GROUPS_DB"]
+    res["CONFIG_FILE"] = os.path.join(app.config["CONFIG_DIR"], "config.py")
     res["links"] = "/help/"
     return flask.jsonify(res)
 
