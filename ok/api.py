@@ -8,8 +8,8 @@ import os
 import sys
 import json
 import re
+import serializeddicts
 
-from serializeddicts import KyotoCabinetDict
 from restrictions import restrictions_manager
 from ok import app
 
@@ -24,7 +24,7 @@ except ImportError:
     pass
 
 USERS_DB_PATH = os.path.join(DATA_DIR, "users.kch")
-USERS_DB = KyotoCabinetDict(USERS_DB_PATH)
+USERS_DB = serializeddicts.KyotoCabinetDict(USERS_DB_PATH)
 GROUPS_FILE = os.path.join(CONFIG_DIR, "groups.json")
 GROUPS = { "users" : {} }
 
