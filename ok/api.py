@@ -31,6 +31,10 @@ except ImportError:
     pass
 
 def get_groups_db():
+    """
+    Returns the group database from the application context (creates it if
+    necessary).
+    """
     if not hasattr(flask.g, "groups_db"):
         first_run = not os.path.exists(app.config["GROUPS_DB"])
         groups_db = serializeddicts.JsonDict(app.config["GROUPS_DB"])
@@ -41,6 +45,10 @@ def get_groups_db():
     return flask.g.groups_db
 
 def get_users_db():
+    """
+    Returns the users database from the application context (creates it if
+    necessary).
+    """
     if not hasattr(flask.g, "users_db"):
         flask.g.users_db = \
                 serializeddicts.KyotoCabinetDict(app.config["USERS_DB"])
