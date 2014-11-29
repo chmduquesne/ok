@@ -28,9 +28,9 @@ class DBOpen():
         if not self.db.close():
             raise OSError(str(self.db.error()))
 
-class KyotoCabinetDict():
+class KyotoCabinetDict(dict):
     """
-    KyotoCabinet database with an (incomplete) interface of dictionary
+    KyotoCabinet database with an interface of dictionary
     """
 
     def __init__(self, path):
@@ -108,50 +108,42 @@ class KyotoCabinetDict():
         for key, value in self.iteritems():
             yield key
 
-    def iterkeys(self):
-        return self.__iter__()
-
-    def itervalues(self):
-        for key, value in self.iteritems():
-            yield value
+    def clear(self):
+        for key in self:
+            del self[key]
 
     def has_key(self, key):
         return key in self
 
-    def keys(self):
-        return list(self.iterkeys())
+class JsonDict(dict):
+    def __init__(self, path):
+        self.path = path
+        with open(self.path, "wb") as f:
+            json.dump(self, indent=4, fp=f)
 
-    def values(self):
-        return list(self.itervalues())
+    def __setitem__(self, *args, **kwargs):
+        res = super(JsonDict, self).__setitem__(*args, **kwargs)
+        with open(self.path, "wb") as f:
+            json.dump(self, indent=4, fp=f)
+        return res
 
-    def items(self):
-        return list(self.iteritems())
+    def __delitem__(self, *args, **kwargs):
+        res = super(JsonDict, self).__delitem__(*args, **kwargs)
+        with open(self.path, "wb") as f:
+            json.dump(self, indent=4, fp=f)
+        return res
 
-    def clear(self):
-        for i in self.iterkeys():
-            del self[i]
+    def pop(self, *args, **kwargs):
+        res = super(JsonDict, self).pop(*args, **kwargs)
+        with open(self.path, "wb") as f:
+            json.dump(self, indent=4, fp=f)
+        return res
 
-    def viewitems(self):
-        raise NotImplementedError
-
-    def viewkeys(self):
-        raise NotImplementedError
-
-    def viewvalues(self):
-        raise NotImplementedError
-
-    def copy(self):
-        raise NotImplementedError
-
-    @classmethod
-    def fromkeys(cls, seq, value=None):
-        raise NotImplementedError
-
-    def setdefault(self, key, default=None):
-        raise NotImplementedError
-
-    def update(self, other):
-        raise NotImplementedError
+    def clear(self, *args, **kwargs):
+        res = super(JsonDict, self).clear(*args, **kwargs)
+        with open(self.path, "wb") as f:
+            json.dump(self, indent=4, fp=f)
+        return res
 
 def print_kyotocabinetdict(db):
     print '{'
@@ -162,7 +154,8 @@ def print_kyotocabinetdict(db):
 
 def test():
     print "create empty dict"
-    db = KyotoCabinetDict("test.kch")
+    #db = KyotoCabinetDict("test.kch")
+    db = JsonDict("test.json")
     print_kyotocabinetdict(db)
     print "add a=b, c=d"
     db["a"] = { "key": "value" }

@@ -9,7 +9,7 @@ import sys
 import json
 import re
 
-from kyotocabinetdict import KyotoCabinetDict
+from serializeddicts import KyotoCabinetDict
 from restrictions import restrictions_manager
 from ok import app
 
