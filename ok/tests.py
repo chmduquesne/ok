@@ -90,12 +90,12 @@ class DictionaryTestCase():
     def get_dictionary(self):
         raise NotImplementedError
 
-    def assertSynchronized(self, dictionary):
+    def assertInSyncWithCopy(self, dictionary):
         raise NotImplementedError
 
     def test_empty(self):
         d = self.get_dictionary()
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_len(self):
         d = self.get_dictionary()
@@ -103,13 +103,13 @@ class DictionaryTestCase():
         for key in ["a", "b", "c"]:
             d[key] = key
         self.assertEqual(len(d), 3)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_getitem_empty(self):
         d = self.get_dictionary()
         with self.assertRaises(KeyError):
             d["does not exist"]
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_getitem_assign(self):
         d = self.get_dictionary()
@@ -118,13 +118,13 @@ class DictionaryTestCase():
         self.assertEqual(d["a"], "a")
         self.assertEqual(d["b"], "b")
         self.assertEqual(d["c"], "c")
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_delete_empty(self):
         d = self.get_dictionary()
         with self.assertRaises(KeyError):
             del d["does not exist"]
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_delete(self):
         d = self.get_dictionary()
@@ -133,21 +133,21 @@ class DictionaryTestCase():
         del d["a"]
         with self.assertRaises(KeyError):
             del d["a"]
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_in(self):
         d = self.get_dictionary()
         self.assertEqual("a" in d, False)
         d["a"] = "a"
         self.assertEqual("a" in d, True)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_not_in(self):
         d = self.get_dictionary()
         self.assertEqual("a" not in d, True)
         d["a"] = "a"
         self.assertEqual("a" not in d, False)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_iter(self):
         d = self.get_dictionary()
@@ -155,7 +155,7 @@ class DictionaryTestCase():
             d[key] = key
         for key in iter(d):
             self.assertEqual(d[key], key)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_iter_for_in(self):
         d = self.get_dictionary()
@@ -163,7 +163,7 @@ class DictionaryTestCase():
             d[key] = key
         for key in d:
             self.assertEqual(d[key], key)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_clear(self):
         d = self.get_dictionary()
@@ -172,19 +172,19 @@ class DictionaryTestCase():
         self.assertEqual(len(d), 3)
         d.clear()
         self.assertEqual(len(d), 0)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_get_empty(self):
         d = self.get_dictionary()
         res = d.get("does not exist")
         self.assertEqual(res, None)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_get_default(self):
         d = self.get_dictionary()
         res = d.get("does not exist", "default value")
         self.assertEqual(res, "default value")
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_get(self):
         d = self.get_dictionary()
@@ -192,14 +192,14 @@ class DictionaryTestCase():
             d[key] = key
         for key in d:
             self.assertEqual(d.get(key), key)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_has_key(self):
         d = self.get_dictionary()
         self.assertEqual(d.has_key("a"), False)
         d["a"] = "a"
         self.assertEqual(d.has_key("a"), True)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_items(self):
         d = self.get_dictionary()
@@ -207,7 +207,7 @@ class DictionaryTestCase():
             d[key] = key
         for key, value in d.items():
             self.assertEqual(key, value)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_iteritems(self):
         d = self.get_dictionary()
@@ -215,7 +215,7 @@ class DictionaryTestCase():
             d[key] = key
         for key, value in d.iteritems():
             self.assertEqual(key, value)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_iterkeys(self):
         d = self.get_dictionary()
@@ -223,7 +223,7 @@ class DictionaryTestCase():
             d[key] = key
         for key in d.iterkeys():
             self.assertEqual(d[key], key)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_itervalues(self):
         d = self.get_dictionary()
@@ -231,7 +231,7 @@ class DictionaryTestCase():
             d[key] = key
         for value in d.itervalues():
             self.assertEqual(d[value], value)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_keys(self):
         d = self.get_dictionary()
@@ -239,26 +239,26 @@ class DictionaryTestCase():
             d[key] = key
         for key in d.keys():
             self.assertEqual(d[key], key)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_pop_empty(self):
         d = self.get_dictionary()
         with self.assertRaises(KeyError):
             res = d.pop("does not exist")
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_pop_default(self):
         d = self.get_dictionary()
         res = d.pop("does not exist", "default value")
         self.assertEqual(res, "default value")
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_pop(self):
         d = self.get_dictionary()
         d["a"] = "a"
         res = d.pop("a")
         self.assertEqual(res, "a")
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
     def test_values(self):
         d = self.get_dictionary()
@@ -266,7 +266,7 @@ class DictionaryTestCase():
             d[key] = key
         for value in d.values():
             self.assertEqual(d[value], value)
-        self.assertSynchronized(d)
+        self.assertInSyncWithCopy(d)
 
 class JsonDictTestCase(DictionaryTestCase, unittest.TestCase):
 
@@ -283,7 +283,7 @@ class JsonDictTestCase(DictionaryTestCase, unittest.TestCase):
     def tearDown(self):
         os.unlink(self.dict_path)
 
-    def assertSynchronized(self, dictionary):
+    def assertInSyncWithCopy(self, dictionary):
         assert dictionary == ok.serializeddicts.JsonDict(self.dict_path)
 
 class KyotoCabinetDictTestCase(DictionaryTestCase, unittest.TestCase):
@@ -301,6 +301,6 @@ class KyotoCabinetDictTestCase(DictionaryTestCase, unittest.TestCase):
     def tearDown(self):
         os.unlink(self.dict_path)
 
-    def assertSynchronized(self, dictionary):
+    def assertInSyncWithCopy(self, dictionary):
         assert dictionary == ok.serializeddicts.KyotoCabinetDict(self.dict_path)
 
