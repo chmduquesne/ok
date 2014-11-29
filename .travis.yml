@@ -1,5 +1,5 @@
 install:
-    - apt get install -qq gcc build-essential libkyotocabinet-dev
+    - sudo apt get install -qq gcc build-essential libkyotocabinet-dev
 python:
     - 2.7
 before_script:
