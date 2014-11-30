@@ -139,44 +139,44 @@ def ok():
     users_db = get_users_db()
     groups_db = get_groups_db()
 
-    url = flask.request.args.get("url", None)
-    groups = flask.request.args.get("groups", None)
-    user = flask.request.args.get("user", None)
-    http_method = urldecode(flask.request.args.get("http_method", "GET"))
-    post_parameters = flask.request.args.get("post_parameters", None)
+    url_arg = flask.request.args.get("url", None)
+    groups_arg = flask.request.args.get("groups", None)
+    user_arg = flask.request.args.get("user", None)
+    http_method_arg = urldecode(flask.request.args.get("http_method", "GET"))
+    post_parameters_arg = flask.request.args.get("post_parameters", None)
 
-    if not url:
+    if url_arg is None:
         return json_response(400, "Expected a url argument")
-    if not (user or groups):
+    if user_arg is None and groups_arg is None:
         return json_response(400, "Expected a user or some groups")
-    if groups is None:
-        user = urldecode(user)
-        if not users_db.get(user):
+    if groups_arg is None:
+        username = urldecode(user_arg)
+        if not users_db.get(username):
             if app.config["AUTO_CREATE"]:
-                users_db[user] = {
+                users_db[username] = {
                         "groups": app.config["DEFAULT_GROUPS"]
                         }
             else:
-                return json_response(400, "User %s does not exist" % user)
-        groups = users_db[user]["groups"]
+                return json_response(400, "%s: unkown user" % username)
+        group_list = users_db[username]["groups"]
     else:
         try:
-            groups = urldecode(groups).split(",")
+            group_list = urldecode(groups_arg).split(",")
         except TypeError:
-            return json_response(400, "Could not parse the groups")
-    if post_parameters:
+            return json_response(400, "%s: unparsable groups" % groups_arg)
+    if post_parameters_arg:
         try:
-            post_parameters = urllib.parse_qs(post_parameters)
+            post_parameters = urllib.parse_qs(post_parameters_arg)
         except ValueError:
             return json_response(
                     400,
-                    "Could not parse post_parameters %s" % post_parameters
+                    "%s: unparsable post_parameters" % post_parameters
                     )
-    for group in groups:
+    for group in group_list:
         if not groups_db.get(group):
             return json_response(404, "Group %s does not exist" % group)
 
-    url_parts = urlparse.urlsplit(url)
+    url_parts = urlparse.urlsplit(url_arg)
 
     http_scheme = url_parts.scheme
     http_netloc = url_parts.netloc
@@ -193,11 +193,11 @@ def ok():
             http_query = urlparse.parse_qs(url_parts.query)
         except ValueError:
             return json_response(
-                    400, "Could not parse http_query %s" % http_query
+                    400, "%s: unparsable http_query" % http_query
                     )
 
     # For each groups, we go through all the path patterns.
-    for group in groups:
+    for group in group_list:
         restrictions = groups_db[group]
         match_found = False
         # All the matching patterns must return True if the path matches
@@ -223,15 +223,15 @@ def ok():
                             http_password=http_password,
                             http_hostname=http_hostname,
                             http_port=http_port,
-                            http_method=http_method,
-                            post_parameters=post_parameters,
+                            http_method=http_method_arg,
+                            post_parameters=post_parameters_arg,
                             restriction_params=restriction_params
                             ):
                         return json_response(403, "Restriction %s on %s"
                                 % (restrictionname, path_pattern))
         # We need to find at least one matching path
         if match_found:
-            return json_response(200, describe_rights(groups))
+            return json_response(200, describe_rights(group_list))
 
     return json_response(403, "Not allowed (no matching path on any group)")
 
@@ -262,13 +262,14 @@ def users(username=None):
                 return flask.jsonify(user)
         if flask.request.method in ("POST", "PUT"):
             try:
-                groups = flask.request.form.get("groups", None)
-                if groups is not None:
-                    group_list = groups.split(",")
+                groups_arg = flask.request.form.get("groups", None)
+                if groups_arg is not None:
+                    group_list = groups_arg.split(",")
                 else:
                     group_list = []
             except TypeError:
-                return json_response(400, "Could not parse groups")
+                return json_response(400, "%s: unparsable groups" %
+                        groups_arg)
             for groupname in app.config["DEFAULT_GROUPS"]:
                 if groupname not in group_list:
                     group_list.append(groupname)
@@ -314,17 +315,17 @@ def groups(groupname=None):
                 return flask.jsonify(group)
         if flask.request.method in ("POST", "PUT"):
             try:
-                posted_restrictions = flask.request.form.get("restrictions")
-                if not posted_restrictions:
+                restrictions_arg = flask.request.form.get("restrictions")
+                if restrictions_arg is None:
                     restrictions = {}
                 else:
                     restrictions = dict(
-                            json.loads(urldecode(posted_restrictions))
+                            json.loads(urldecode(restrictions_arg))
                             )
             except TypeError:
                 return json_response(
                         400, "Could not parse provided restrictions %s" %
-                        posted_restrictions
+                        restrictions_arg
                         )
             for path_pattern, restriction_list in restrictions.iteritems():
                 for restrictionname, restriction_params in restriction_list:
@@ -335,7 +336,7 @@ def groups(groupname=None):
                                 )
             groups_db[groupname] = restrictions
             return json_response(
-                    200, "Created or updated the group %s" % groupname
+                    200, "%s: group created or updated" % groupname
                     )
         if flask.request.method == "DELETE":
             if group is None:
