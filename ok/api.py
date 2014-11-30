@@ -251,28 +251,40 @@ def users(username=None):
     """
     # list all users
     users_db = get_users_db()
+
     if username is None:
         return flask.jsonify(users_db)
     else:
         user = users_db.get(username)
+
         if flask.request.method == "GET":
             if user is None:
                 return json_response(404, "%s: unknown user" % username)
             else:
                 return flask.jsonify(user)
+
         if flask.request.method in ("POST", "PUT"):
+
+            if flask.request.method == "POST":
+                if users_db.get(username):
+                    return json_response(400, "%s: user already exists")
+            if flask.request.method == "PUT":
+                if not users_db.get(username):
+                    return json_response(404, "%s: unknown user")
+
             try:
                 groups_arg = flask.request.form.get("groups", None)
-                if groups_arg is not None:
-                    group_list = groups_arg.split(",")
-                else:
+                if groups_arg is None:
                     group_list = []
+                else:
+                    group_list = groups_arg.split(",")
             except TypeError:
                 return json_response(400, "%s: unparsable groups" %
                         groups_arg)
             for groupname in app.config["DEFAULT_GROUPS"]:
                 if groupname not in group_list:
                     group_list.append(groupname)
+
             groups_db = get_groups_db()
             for groupname in group_list:
                 if groupname not in groups_db:
@@ -281,8 +293,14 @@ def users(username=None):
                     else:
                         return json_response(404, "%s: unknown group" %
                                 groupname)
+
             users_db[username] = { "groups": group_list }
-            return json_response(200, "User created or updated")
+
+            if flask.request.method == "POST":
+                return json_response(201, "%s: user created" % username)
+            else:
+                return json_response(200, "%s: user updated" % username)
+
         if flask.request.method == "DELETE":
             if user is None:
                 return json_response(404, "%s: unknown user" % username)
@@ -304,22 +322,33 @@ def groups(groupname=None):
     DELETE /groups/<groupname>
     """
     groups_db = get_groups_db()
+
     if groupname is None:
         return flask.jsonify(groups_db)
     else:
         group = groups_db.get(groupname)
+
         if flask.request.method == "GET":
             if group is None:
                 return json_response(404, "%s: unknown group" % groupname)
             else:
                 return flask.jsonify(group)
+
         if flask.request.method in ("POST", "PUT"):
+
+            if flask.request.method == "POST":
+                if groups_db.get(groupname):
+                    return json_response(400, "%s: group already exists")
+            if flask.request.method == "PUT":
+                if groups_db.get(groupname) is None:
+                    return json_response(404, "%s: unknown group")
+
             try:
                 restrictions_arg = flask.request.form.get("restrictions")
                 if restrictions_arg is None:
-                    restrictions = {}
+                    path_restrictions = {}
                 else:
-                    restrictions = dict(
+                    path_restrictions = dict(
                             json.loads(urldecode(restrictions_arg))
                             )
             except TypeError:
@@ -327,17 +356,24 @@ def groups(groupname=None):
                         400, "Could not parse provided restrictions %s" %
                         restrictions_arg
                         )
-            for path_pattern, restriction_list in restrictions.iteritems():
+            for path_pattern, restriction_list in path_restrictions.iteritems():
                 for restrictionname, restriction_params in restriction_list:
                     if restrictionname not in restrictions_manager.all():
                         return json_response(
                                 404, "%s: unknown restriction" %
                                 restrictionname
                                 )
+
             groups_db[groupname] = restrictions
-            return json_response(
-                    200, "%s: group created or updated" % groupname
-                    )
+
+            if flask.request.method == "POST":
+                return json_response(
+                        201, "%s: group created" % groupname
+                        )
+            if flask.request.method == "PUT":
+                return json_response(
+                        200, "%s: group updated" % groupname
+                        )
         if flask.request.method == "DELETE":
             if group is None:
                 return json_response(404, "%s: unknown group" % groupname)

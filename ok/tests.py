@@ -231,7 +231,7 @@ class OkAppTestCase(unittest.TestCase):
         # create user john, part of group_1 and group_2
         response = self.app.post("/users/john",data={"groups":
             "group_1,group_2"})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         # check that john exists and is part of group_1 and group_2
         response = self.app.get("/users/john")
         groups = json.loads(response.data)
