@@ -72,8 +72,6 @@ class OkAppTestCase(unittest.TestCase):
             TESTING=True,
             USERS_DB=os.path.join(self.tempdir, "users.kch"),
             GROUPS_DB=os.path.join(self.tempdir, "groups.json"),
-            AUTO_CREATE=True,
-            DEFAULT_GROUPS=["users"]
             ))
         self.app = ok.app.test_client()
 
@@ -93,13 +91,15 @@ class OkAppTestCase(unittest.TestCase):
             response = self.app.get("/restrictions/")
             restriction_list = json.loads(response.data)
             self.assertIn("myrestriction", restriction_list)
-        response = self.app.get("/restrictions/")
-        restriction_list = json.loads(response.data)
-        self.assertNotIn("myrestriction", restriction_list)
 
-    def test_root_status(self):
+    def test_config(self):
         response = self.app.get("/")
         self.assertEqual(response.status_code, 200)
+        body = json.loads(response.data)
+        self.assertIn("USERS_DB", body)
+        self.assertIn("GROUPS_DB", body)
+        response = self.app.get("/config/")
+        self.assertEqual(body, json.loads(response.data))
 
     def test_ok_no_arg(self):
         response = self.app.get("/ok/")

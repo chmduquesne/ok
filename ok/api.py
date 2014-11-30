@@ -371,7 +371,7 @@ def restrictions(restrictionname=None):
             return json_response(200, { "description" : description })
 
 @app.route("/")
-@app.route("/app_info")
+@app.route("/config/")
 def app_info():
     res = dict()
     res["USERS_DB"] = app.config["USERS_DB"]
