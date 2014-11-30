@@ -262,9 +262,9 @@ def users(username=None):
                 return flask.jsonify(user)
         if flask.request.method in ("POST", "PUT"):
             try:
-                group_list = flask.request.form.get("groups", None)
+                groups = flask.request.form.get("groups", None)
                 if groups is not None:
-                    group_list = group_list.split(",")
+                    group_list = groups.split(",")
                 else:
                     group_list = []
             except TypeError:

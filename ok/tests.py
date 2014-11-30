@@ -6,7 +6,7 @@ import json
 import tempfile
 import shutil
 
-CONFIG_RESTRICTIONS="""
+CONFIG_USER_DEFINED_RESTRICTION="""
 from ok.restrictions import restrictions_manager
 
 @restrictions_manager.register()
@@ -15,6 +15,14 @@ def myrestriction(*args, **kwargs):
     This restriction allows nothing
     \"\"\"
     return False
+"""
+
+CONFIG_CUSTOMIZED_DEFAULT_GROUPS="""
+DEFAULT_GROUPS=["default", "all"]
+"""
+
+CONFIG_NO_AUTO_CREATE="""
+AUTO_CREATE=False
 """
 
 class OkConfig:
@@ -85,14 +93,14 @@ class OkAppTestCase(unittest.TestCase):
 
     def test_import_restriction(self):
         response = self.app.get("/restrictions/")
-        restriction_list = json.loads(response.data)
-        self.assertNotIn("myrestriction", restriction_list)
-        with OkConfig(CONFIG_RESTRICTIONS):
+        body = json.loads(response.data)
+        self.assertNotIn("myrestriction", body)
+        with OkConfig(CONFIG_USER_DEFINED_RESTRICTION):
             response = self.app.get("/restrictions/")
-            restriction_list = json.loads(response.data)
-            self.assertIn("myrestriction", restriction_list)
+            body = json.loads(response.data)
+            self.assertIn("myrestriction", body)
 
-    def test_config(self):
+    def test_config_url(self):
         response = self.app.get("/")
         self.assertEqual(response.status_code, 200)
         body = json.loads(response.data)
@@ -101,18 +109,104 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/config/")
         self.assertEqual(body, json.loads(response.data))
 
-    def test_ok_no_arg(self):
+    def test_ok_url(self):
         response = self.app.get("/ok/")
         body = json.loads(response.data)
         self.assertEqual(body["message"], "Expected a url argument")
         self.assertEqual(response.status_code, 400)
 
-    def test_users_status(self):
+    def test_users_url(self):
         response = self.app.get("/users/")
+        body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(body, dict())
+
+    def test_users_url_unexisting(self):
+        response = self.app.get("/users/john")
+        body = json.loads(response.data)
+        self.assertEqual(response.status_code, 404)
+
+    def test_users_url_post_user(self):
+        response = self.app.get("/users/john")
+        body = json.loads(response.data)
+        self.assertEqual(response.status_code, 404)
+        self.app.post("/users/john")
+        response = self.app.get("/users/john")
+        body = json.loads(response.data)
+        self.assertEqual(response.status_code, 200)
+        for g in ok.app.config["DEFAULT_GROUPS"]:
+            self.assertIn(g, body["groups"])
+
+    def test_users_url_post_user_no_auto_create(self):
+        with OkConfig(CONFIG_NO_AUTO_CREATE):
+            response = self.app.get("/users/john")
+            body = json.loads(response.data)
+            self.assertEqual(response.status_code, 404)
+            self.app.post("/users/john")
+            response = self.app.get("/users/john")
+            body = json.loads(response.data)
+            self.assertEqual(response.status_code, 200)
+            for g in ok.app.config["DEFAULT_GROUPS"]:
+                self.assertIn(g, body["groups"])
+
+    def test_users_url_post_user_customized_default_groups(self):
+        with OkConfig(CONFIG_CUSTOMIZED_DEFAULT_GROUPS):
+            response = self.app.get("/users/john")
+            body = json.loads(response.data)
+            self.assertEqual(response.status_code, 404)
+            self.app.post("/users/john")
+            response = self.app.get("/users/john")
+            body = json.loads(response.data)
+            self.assertEqual(response.status_code, 200)
+            for g in ok.app.config["DEFAULT_GROUPS"]:
+                self.assertIn(g, body["groups"])
+
+    def test_users_url_post_user_group_admin(self):
+        response = self.app.get("/users/john")
+        body = json.loads(response.data)
+        self.assertEqual(response.status_code, 404)
+        self.app.post("/users/john", data={"groups": "admin"})
+        response = self.app.get("/users/john")
+        body = json.loads(response.data)
+        self.assertEqual(response.status_code, 200)
+        for g in ok.app.config["DEFAULT_GROUPS"]:
+            self.assertIn(g, body["groups"])
+        self.assertIn("admin", body["groups"])
+
+    def test_users_url_post_user_unexisting_group(self):
+        response = self.app.get("/groups/unexisting")
+        self.assertEqual(response.status_code, 404)
+        response = self.app.get("/users/john")
+        body = json.loads(response.data)
+        self.assertEqual(response.status_code, 404)
+        self.app.post("/users/john", data={"groups": "unexisting"})
+        response = self.app.get("/users/john")
+        body = json.loads(response.data)
+        self.assertEqual(response.status_code, 200)
+        for g in ok.app.config["DEFAULT_GROUPS"]:
+            self.assertIn(g, body["groups"])
+        self.assertIn("unexisting", body["groups"])
+        response = self.app.get("/groups/unexisting")
+        self.assertEqual(response.status_code, 200)
+        body = json.loads(response.data)
+        self.assertEqual(body, dict())
+
+    def test_users_url_post_user_unexisting_group_no_autocreate(self):
+        with OkConfig(CONFIG_NO_AUTO_CREATE):
+            response = self.app.get("/groups/unexisting")
+            self.assertEqual(response.status_code, 404)
+            response = self.app.get("/users/john")
+            body = json.loads(response.data)
+            self.assertEqual(response.status_code, 404)
+            response = self.app.post("/users/john",
+                    data={"groups": "unexisting"})
+            self.assertEqual(response.status_code, 404)
+            response = self.app.get("/users/john")
+            self.assertEqual(response.status_code, 404)
 
     def test_groups_status(self):
         response = self.app.get("/groups/")
+        body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
 
     def test_restrictions_status(self):
