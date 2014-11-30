@@ -6,18 +6,6 @@ import json
 import tempfile
 import shutil
 
-# Available methods on responses objects: see
-# http://werkzeug.pocoo.org/docs/0.9/quickstart/#responses
-
-CONFIG_RESET ="""
-TESTING=True
-CONFIG=%s
-USERS_DB="%s/users.kch"
-GROUPS_DB="%s/groups.json"
-AUTO_CREATE=True
-DEFAULT_GROUPS=["users"]
-"""
-
 CONFIG_RESTRICTIONS="""
 from ok.restrictions import restrictions_manager
 
@@ -29,43 +17,85 @@ def myrestriction(*args, **kwargs):
     return False
 """
 
+class OkConfig:
+    """
+    Helper class to load a configuration temporarily.
+
+    Usage:
+        >>> with OkConfig(sometext):
+        >>>     do_stuff()
+    """
+
+    def __init__(self, config_text):
+        self.config_text = config_text
+
+    def save_app_config(self):
+        self.saved_config = dict(
+                TESTING=ok.app.config["TESTING"],
+                USERS_DB=ok.app.config["USERS_DB"],
+                GROUPS_DB=ok.app.config["GROUPS_DB"],
+                AUTO_CREATE=ok.app.config["AUTO_CREATE"],
+                DEFAULT_GROUPS=ok.app.config["DEFAULT_GROUPS"]
+                )
+        self.registered_restrictions = \
+                ok.restrictions.restrictions_manager.func_map.keys()
+
+    def restore_app_config(self):
+        ok.app.config.update(self.saved_config)
+        for restriction in \
+                ok.restrictions.restrictions_manager.func_map.keys():
+            if restriction not in self.registered_restrictions:
+                del ok.restrictions.restrictions_manager.func_map[restriction]
+
+    def load_text_config(self):
+        fd, config_file = tempfile.mkstemp(suffix='.py')
+        os.close(fd)
+        os.unlink(config_file)
+        with open(config_file, "wb") as f:
+            f.write(self.config_text)
+        os.environ["OK_CONFIG"] = config_file
+        ok.app.config.from_envvar("OK_CONFIG")
+        os.unlink(config_file)
+
+    def __enter__(self):
+        self.save_app_config()
+        self.load_text_config()
+
+    def __exit__(self, type, value, traceback):
+        self.restore_app_config()
+
 class OkAppTestCase(unittest.TestCase):
 
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
-        self.reset_config()
-        self.app = ok.app.test_client()
-
-    def tearDown(self):
-        self.reset_config()
-        shutil.rmtree(self.tempdir)
-
-    def reset_config(self):
         ok.app.config.update(dict(
             TESTING=True,
-            CONFIG=os.path.join(self.tempdir, "config.py"),
             USERS_DB=os.path.join(self.tempdir, "users.kch"),
             GROUPS_DB=os.path.join(self.tempdir, "groups.json"),
             AUTO_CREATE=True,
             DEFAULT_GROUPS=["users"]
             ))
+        self.app = ok.app.test_client()
+
+    def tearDown(self):
+        shutil.rmtree(self.tempdir)
 
     def test_import_config(self):
-        with open(ok.app.config["CONFIG"], "wb") as f:
-            f.write("AUTO_CREATE=False")
-        ok.app.config.from_pyfile(ok.app.config["CONFIG"])
-        self.assertEqual(ok.app.config["AUTO_CREATE"], False)
+        with OkConfig("AUTO_CREATE=False"):
+            self.assertEqual(ok.app.config["AUTO_CREATE"], False)
+        self.assertEqual(ok.app.config["AUTO_CREATE"], True)
 
     def test_import_restriction(self):
         response = self.app.get("/restrictions/")
         restriction_list = json.loads(response.data)
         self.assertNotIn("myrestriction", restriction_list)
-        with open(ok.app.config["CONFIG"], "wb") as f:
-            f.write(CONFIG_RESTRICTIONS)
-        ok.app.config.from_pyfile(ok.app.config["CONFIG"])
+        with OkConfig(CONFIG_RESTRICTIONS):
+            response = self.app.get("/restrictions/")
+            restriction_list = json.loads(response.data)
+            self.assertIn("myrestriction", restriction_list)
         response = self.app.get("/restrictions/")
         restriction_list = json.loads(response.data)
-        self.assertIn("myrestriction", restriction_list)
+        self.assertNotIn("myrestriction", restriction_list)
 
     def test_root_status(self):
         response = self.app.get("/")

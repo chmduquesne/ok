@@ -23,10 +23,7 @@ app.config.update(dict(
     AUTO_CREATE=True,
     DEFAULT_GROUPS=["users"]
     ))
-config_path = os.getenv(
-        "OK_CONFIG", os.path.join(XDG_CONFIG_DIR,"config.py")
-    )
-app.config.from_pyfile(config_path, silent=True)
+app.config.from_envvar("OK_CONFIG", silent=True)
 
 def get_groups_db():
     """
