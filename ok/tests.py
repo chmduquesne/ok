@@ -204,10 +204,24 @@ class OkAppTestCase(unittest.TestCase):
             response = self.app.get("/users/john")
             self.assertEqual(response.status_code, 404)
 
-    def test_groups_status(self):
-        response = self.app.get("/groups/")
+    def test_users_url_delete_unexisting_user(self):
+        response = self.app.get("/users/john")
+        body = json.loads(response.data)
+        self.assertEqual(response.status_code, 404)
+        response = self.app.delete("/users/john")
+        body = json.loads(response.data)
+        self.assertEqual(response.status_code, 404)
+
+    def test_users_url_delete_user(self):
+        response = self.app.get("/users/john")
+        body = json.loads(response.data)
+        self.assertEqual(response.status_code, 404)
+        self.app.post("/users/john")
+        response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
+        response = self.app.delete("/users/john")
+        self.assertEqual(response.status_code, 204)
 
     def test_restrictions_status(self):
         response = self.app.get("/restrictions/")
