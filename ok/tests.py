@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import ok
 import os
 import unittest
@@ -8,19 +9,63 @@ import shutil
 # Available methods on responses objects: see
 # http://werkzeug.pocoo.org/docs/0.9/quickstart/#responses
 
-class OkStatusTestCase(unittest.TestCase):
+CONFIG_RESET ="""
+TESTING=True
+CONFIG=%s
+USERS_DB="%s/users.kch"
+GROUPS_DB="%s/groups.json"
+AUTO_CREATE=True
+DEFAULT_GROUPS=["users"]
+"""
+
+CONFIG_RESTRICTIONS="""
+from ok.restrictions import restrictions_manager
+
+@restrictions_manager.register()
+def myrestriction(*args, **kwargs):
+    \"\"\"
+    This restriction allows nothing
+    \"\"\"
+    return False
+"""
+
+class OkAppTestCase(unittest.TestCase):
 
     def setUp(self):
-        ok.app.config["TESTING"] = True
-        self.config_dir = tempfile.mkdtemp()
-        self.data_dir = tempfile.mkdtemp()
-        os.environ["XDG_CONFIG_DIR"] = self.config_dir
-        os.environ["XDG_DATA_DIR"] = self.data_dir
+        self.tempdir = tempfile.mkdtemp()
+        self.reset_config()
         self.app = ok.app.test_client()
 
     def tearDown(self):
-        shutil.rmtree(self.config_dir)
-        shutil.rmtree(self.data_dir)
+        self.reset_config()
+        shutil.rmtree(self.tempdir)
+
+    def reset_config(self):
+        ok.app.config.update(dict(
+            TESTING=True,
+            CONFIG=os.path.join(self.tempdir, "config.py"),
+            USERS_DB=os.path.join(self.tempdir, "users.kch"),
+            GROUPS_DB=os.path.join(self.tempdir, "groups.json"),
+            AUTO_CREATE=True,
+            DEFAULT_GROUPS=["users"]
+            ))
+
+    def test_import_config(self):
+        with open(ok.app.config["CONFIG"], "wb") as f:
+            f.write("AUTO_CREATE=False")
+        ok.app.config.from_pyfile(ok.app.config["CONFIG"])
+        self.assertEqual(ok.app.config["AUTO_CREATE"], False)
+
+    def test_import_restriction(self):
+        response = self.app.get("/restrictions/")
+        restriction_list = json.loads(response.data)
+        self.assertNotIn("myrestriction", restriction_list)
+        with open(ok.app.config["CONFIG"], "wb") as f:
+            f.write(CONFIG_RESTRICTIONS)
+        ok.app.config.from_pyfile(ok.app.config["CONFIG"])
+        response = self.app.get("/restrictions/")
+        restriction_list = json.loads(response.data)
+        self.assertIn("myrestriction", restriction_list)
 
     def test_root_status(self):
         response = self.app.get("/")

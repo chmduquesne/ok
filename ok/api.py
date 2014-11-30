@@ -18,17 +18,13 @@ XDG_CONFIG_DIR = xdg.BaseDirectory.save_config_path(APP_NAME)
 XDG_DATA_DIR = xdg.BaseDirectory.save_data_path(APP_NAME)
 
 app.config.update(dict(
-    CONFIG_DIR=XDG_CONFIG_DIR,
+    CONFIG=os.path.join(XDG_CONFIG_DIR, "config.py"),
     USERS_DB=os.path.join(XDG_DATA_DIR, "users.kch"),
-    GROUPS_DB=os.path.join(XDG_CONFIG_DIR, "groups.json")
+    GROUPS_DB=os.path.join(XDG_CONFIG_DIR, "groups.json"),
+    AUTO_CREATE=True,
+    DEFAULT_GROUPS=["users"]
     ))
-
-# load the user configured functions
-sys.path.append(app.config["CONFIG_DIR"])
-try:
-    import config
-except ImportError:
-    pass
+app.config.from_pyfile(os.path.join(app.config["CONFIG"]), silent=True)
 
 def get_groups_db():
     """
@@ -39,7 +35,8 @@ def get_groups_db():
         first_run = not os.path.exists(app.config["GROUPS_DB"])
         groups_db = serializeddicts.JsonDict(app.config["GROUPS_DB"])
         if first_run:
-            groups_db["users"] = {}
+            for groupname in app.config["DEFAULT_GROUPS"]:
+                groups_db[groupname] = {}
         flask.g.groups_db = groups_db
     flask.g.groups_db["admin"] = { "/.*$" : [ [ "unrestricted", None ] ] }
     return flask.g.groups_db
@@ -55,9 +52,15 @@ def get_users_db():
     return flask.g.users_db
 
 def urldecode(s):
+    """
+    Decodes an url-encoded string
+    """
     return urllib2.unquote(s).decode('utf-8')
 
 def json_response(status, body={}):
+    """
+    Builds a response object with the content type set to json
+    """
     status_message = {
             200: "OK",
             201: "Created",
@@ -87,7 +90,7 @@ def ok():
     allowed or not.
 
     How to query:
-    GET /ok/?url=<url>&user=<user>&groups=<group-list>&http_method=<http_method>&post_parameters=<post_parameters>
+    GET /ok/?url=<url>&user=<user>&groups=<group-list>&http_method=<http_method>&post_parameters=<post_parameters>&auto_create=False&default_groups=<group-list>
 
     Arguments:
     - url (mandatory):
@@ -100,6 +103,11 @@ def ok():
     The groups the user belong to, separated by commas
     - post_parameters (optional)
     The post parameters (data type application/x-www-form-urlencoded)
+    - auto_create (optional)
+    If true (the default) the app will create the user if it does not exist
+    - default_groups (optional)
+    Unexisting users will be assumed to be in these groups. If auto_create
+    is true, the user will be created with these groups.
 
     All the arguments must be url-encoded. One of the parameters user or
     groups must be provided. If both are provided, the api call will
@@ -142,17 +150,21 @@ def ok():
         return json_response(400, "Expected a url argument")
     if not (user or groups):
         return json_response(400, "Expected a user or some groups")
-    if user:
+    if groups is None:
         user = urldecode(user)
-    if user and not users_db.get(user):
-        return json_response(400, "User %s does not exist" % user)
-    if groups:
+        if not users_db.get(user):
+            if app.config["AUTO_CREATE"]:
+                users_db[user] = {
+                        "groups": app.config["DEFAULT_GROUPS"]
+                        }
+            else:
+                return json_response(400, "User %s does not exist" % user)
+        groups = users_db[user]["groups"]
+    else:
         try:
             groups = urldecode(groups).split(",")
         except TypeError:
             return json_response(400, "Could not parse the groups")
-    else:
-        groups = users_db[user]["groups"]
     if post_parameters:
         try:
             post_parameters = urllib.parse_qs(post_parameters)
@@ -237,10 +249,6 @@ def users(username=None):
     POST /users/<username>
     PUT /users/<username>
     DELETE /users/<username>
-
-    Returns:
-
-    Additional details:
     """
     # list all users
     users_db = get_users_db()
@@ -250,23 +258,30 @@ def users(username=None):
         user = users_db.get(username)
         if flask.request.method == "GET":
             if user is None:
-                return json_response(404, "Unknown user")
+                return json_response(404, "%s: unknown user" % username)
             else:
                 return flask.jsonify(user)
         if flask.request.method in ("POST", "PUT"):
             try:
-                groups = flask.request.form.get("groups", "users")
-                groups = set(groups.split(","))
+                group_list = flask.request.form.get("groups", None)
+                if groups is not None:
+                    group_list = group_list.split(",")
+                else:
+                    group_list = []
             except TypeError:
                 return json_response(400, "Could not parse groups")
-            # create the group if it does not exist
+            for groupname in app.config["DEFAULT_GROUPS"]:
+                if groupname not in group_list:
+                    group_list.append(groupname)
             groups_db = get_groups_db()
-            for group in groups:
-                if group not in groups_db:
-                    groups_db[group] = {}
-            # any user is part of the group "users"
-            groups.add("users")
-            users_db[username] = { "groups": list(groups) }
+            for groupname in group_list:
+                if groupname not in groups_db:
+                    if app.config["AUTO_CREATE"]:
+                        groups_db[groupname] = {}
+                    else:
+                        return json_response(404, "%s: unknown group" %
+                                groupname)
+            users_db[username] = { "groups": group_list }
             return json_response(200, "User created or updated")
         if flask.request.method == "DELETE":
             if user is None:
@@ -287,10 +302,6 @@ def groups(groupname=None):
     POST /groups/<groupname>
     PUT /groups/<groupname>
     DELETE /groups/<groupname>
-
-    Returns:
-
-    Additional details:
     """
     groups_db = get_groups_db()
     if groupname is None:
@@ -348,10 +359,6 @@ def restrictions(restrictionname=None):
     How to query:
     GET /restrictions
     GET /restrictions/<restrictionname>
-
-    Returns:
-
-    Additional details:
     """
     if restrictionname is None:
         return flask.jsonify(restrictions_manager.all())
@@ -370,7 +377,7 @@ def app_info():
     res = dict()
     res["USERS_DB"] = app.config["USERS_DB"]
     res["GROUPS_DB"] = app.config["GROUPS_DB"]
-    res["CONFIG_FILE"] = os.path.join(app.config["CONFIG_DIR"], "config.py")
+    res["CONFIG"] = app.config["CONFIG"]
     res["links"] = "/help/"
     return flask.jsonify(res)
 
