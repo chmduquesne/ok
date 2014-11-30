@@ -18,13 +18,15 @@ XDG_CONFIG_DIR = xdg.BaseDirectory.save_config_path(APP_NAME)
 XDG_DATA_DIR = xdg.BaseDirectory.save_data_path(APP_NAME)
 
 app.config.update(dict(
-    CONFIG=os.path.join(XDG_CONFIG_DIR, "config.py"),
     USERS_DB=os.path.join(XDG_DATA_DIR, "users.kch"),
     GROUPS_DB=os.path.join(XDG_CONFIG_DIR, "groups.json"),
     AUTO_CREATE=True,
     DEFAULT_GROUPS=["users"]
     ))
-app.config.from_pyfile(os.path.join(app.config["CONFIG"]), silent=True)
+config_path = os.getenv(
+        "OK_CONFIG", os.path.join(XDG_CONFIG_DIR,"config.py")
+    )
+app.config.from_pyfile(config_path, silent=True)
 
 def get_groups_db():
     """
@@ -377,7 +379,6 @@ def app_info():
     res = dict()
     res["USERS_DB"] = app.config["USERS_DB"]
     res["GROUPS_DB"] = app.config["GROUPS_DB"]
-    res["CONFIG"] = app.config["CONFIG"]
     res["links"] = "/help/"
     return flask.jsonify(res)
 
