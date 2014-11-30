@@ -1,4 +1,4 @@
-#!env python2
+#!/usr/bin/python2
 import os
 venv = os.getenv("PYTHON_VIRTUALENV", "venv") + "/bin/activate_this.py"
 execfile(venv, dict(__file__=venv))
