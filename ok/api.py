@@ -248,6 +248,17 @@ def users(username=None):
     POST /users/<username>
     PUT /users/<username>
     DELETE /users/<username>
+
+    Data Model:
+    users = {
+        username1: {
+           "groups": ["groupname1", "groupname2", ...]
+        },
+        username2: {
+           "groups": ["groupname1", "groupname2", ...]
+        },
+        ...
+    }
     """
     # list all users
     users_db = get_users_db()
@@ -320,6 +331,29 @@ def groups(groupname=None):
     POST /groups/<groupname>
     PUT /groups/<groupname>
     DELETE /groups/<groupname>
+
+    Data Model:
+    groups = {
+        groupname1: {
+           "path_pattern1": [["restrictionname1", parameters1],
+                             ["restrictionname2", parameters2],
+                             ...],
+           "path_pattern2": [["restrictionname1", parameters1],
+                             ["restrictionname2", parameters2],
+                             ...],
+            ...
+        },
+        groupname2: {
+           "path_pattern1": [["restrictionname1", parameters1],
+                             ["restrictionname2", parameters2],
+                             ...],
+           "path_pattern2": [["restrictionname1", parameters1],
+                             ["restrictionname2", parameters2],
+                             ...],
+            ...
+        },
+        ...
+    }
     """
     groups_db = get_groups_db()
 

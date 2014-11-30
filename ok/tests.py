@@ -130,7 +130,8 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
-        self.app.post("/users/john")
+        response = self.app.post("/users/john")
+        self.assertEqual(response.status_code, 201)
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
@@ -142,7 +143,8 @@ class OkAppTestCase(unittest.TestCase):
             response = self.app.get("/users/john")
             body = json.loads(response.data)
             self.assertEqual(response.status_code, 404)
-            self.app.post("/users/john")
+            response = self.app.post("/users/john")
+            self.assertEqual(response.status_code, 201)
             response = self.app.get("/users/john")
             body = json.loads(response.data)
             self.assertEqual(response.status_code, 200)
@@ -154,7 +156,8 @@ class OkAppTestCase(unittest.TestCase):
             response = self.app.get("/users/john")
             body = json.loads(response.data)
             self.assertEqual(response.status_code, 404)
-            self.app.post("/users/john")
+            response = self.app.post("/users/john")
+            self.assertEqual(response.status_code, 201)
             response = self.app.get("/users/john")
             body = json.loads(response.data)
             self.assertEqual(response.status_code, 200)
@@ -165,7 +168,8 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
-        self.app.post("/users/john", data={"groups": "admin"})
+        response = self.app.post("/users/john", data={"groups": "admin"})
+        self.assertEqual(response.status_code, 201)
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
@@ -179,7 +183,8 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
-        self.app.post("/users/john", data={"groups": "unexisting"})
+        response = self.app.post("/users/john", data={"groups": "unexisting"})
+        self.assertEqual(response.status_code, 201)
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
@@ -223,39 +228,53 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.delete("/users/john")
         self.assertEqual(response.status_code, 204)
 
-    def test_restrictions_status(self):
-        response = self.app.get("/restrictions/")
-        self.assertEqual(response.status_code, 200)
-
-    def test_post_put_get_delete_user(self):
-        # create user john, part of group_1 and group_2
-        response = self.app.post("/users/john",data={"groups":
-            "group_1,group_2"})
-        self.assertEqual(response.status_code, 201)
-        # check that john exists and is part of group_1 and group_2
+    def test_users_url_update_unexisting_user(self):
         response = self.app.get("/users/john")
-        groups = json.loads(response.data)
-        self.assertIn("group_1", groups["groups"])
-        self.assertIn("group_2", groups["groups"])
-        self.assertIn("users", groups["groups"])
-        # modify john to be part of group_3 and group_4 instead
-        response = self.app.put("/users/john", data={"groups":
-            "group_3,group_4"})
-        self.assertEqual(response.status_code, 200)
-        # check that john exists and now part of group_3 and group_4, and
-        # that he is not in group_1 and group_2 any more
-        response = self.app.get("/users/john")
-        groups = json.loads(response.data)
-        self.assertNotIn("group_1", groups["groups"])
-        self.assertNotIn("group_2", groups["groups"])
-        self.assertIn("group_3", groups["groups"])
-        self.assertIn("group_4", groups["groups"])
-        # delete john
-        response = self.app.delete("/users/john")
-        self.assertEqual(response.status_code, 204)
-        # check that john now returns a 404 error
+        body = json.loads(response.data)
+        self.assertEqual(response.status_code, 404)
+        response = self.app.put("/users/john", data={"groups" : "doesnotmatter"})
+        self.assertEqual(response.status_code, 404)
         response = self.app.get("/users/john")
         self.assertEqual(response.status_code, 404)
+
+    def test_users_url_repost_existing_user(self):
+        response = self.app.get("/users/john")
+        body = json.loads(response.data)
+        self.assertEqual(response.status_code, 404)
+        response = self.app.post("/users/john", data={"groups" : "group"})
+        self.assertEqual(response.status_code, 201)
+        response = self.app.post("/users/john", data={"groups" : "group"})
+        self.assertEqual(response.status_code, 400)
+
+    def test_users_url_update_user(self):
+        response = self.app.get("/users/john")
+        body = json.loads(response.data)
+        self.assertEqual(response.status_code, 404)
+        response = self.app.post("/users/john", data={"groups" : "first"})
+        self.assertEqual(response.status_code, 201)
+        response = self.app.get("/users/john")
+        self.assertEqual(response.status_code, 200)
+        body = json.loads(response.data)
+        self.assertIn("first", body["groups"])
+        response = self.app.put("/users/john", data={"groups" : "second"})
+        self.assertEqual(response.status_code, 200)
+        response = self.app.get("/users/john")
+        self.assertEqual(response.status_code, 200)
+        body = json.loads(response.data)
+        self.assertNotIn("first", body["groups"])
+        self.assertIn("second", body["groups"])
+        response = self.app.put("/users/john", data={"groups" : "third"})
+        self.assertEqual(response.status_code, 200)
+        response = self.app.get("/users/john")
+        self.assertEqual(response.status_code, 200)
+        body = json.loads(response.data)
+        self.assertNotIn("first", body["groups"])
+        self.assertNotIn("second", body["groups"])
+        self.assertIn("third", body["groups"])
+
+    def test_restrictions_url(self):
+        response = self.app.get("/restrictions/")
+        self.assertEqual(response.status_code, 200)
 
     def test_ok(self):
         response = self.app.get("/ok/?url=%2F&groups=admin")
