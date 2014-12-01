@@ -378,7 +378,8 @@ def groups(groupname=None):
                     return json_response(404, "%s: unknown group")
 
             try:
-                restrictions_arg = flask.request.form.get("restrictions")
+                restrictions_arg = flask.request.form.get("restrictions",
+                        None)
                 if restrictions_arg is None:
                     path_restrictions = {}
                 else:
@@ -398,7 +399,7 @@ def groups(groupname=None):
                                 restrictionname
                                 )
 
-            groups_db[groupname] = restrictions
+            groups_db[groupname] = path_restrictions
 
             if flask.request.method == "POST":
                 return json_response(

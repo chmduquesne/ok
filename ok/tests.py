@@ -272,6 +272,21 @@ class OkAppTestCase(unittest.TestCase):
         self.assertNotIn("second", body["groups"])
         self.assertIn("third", body["groups"])
 
+    def test_groups_url(self):
+        response = self.app.get("/groups/")
+        self.assertEquals(response.status_code, 200)
+
+    def test_groups_url_get_unknown_group(self):
+        response = self.app.get("/groups/doesnotexist")
+        self.assertEquals(response.status_code, 404)
+
+    def test_groups_url_create_empty_group(self):
+        response = self.app.post("/groups/emptygroup")
+        self.assertEquals(response.status_code, 201)
+        response = self.app.get("/groups/emptygroup")
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(json.loads(response.data), dict())
+
     def test_restrictions_url(self):
         response = self.app.get("/restrictions/")
         self.assertEqual(response.status_code, 200)
