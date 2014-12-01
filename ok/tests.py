@@ -30,19 +30,20 @@ CONFIG_ADVANCED_RESTRICTIONS="""
 from ok.restrictions import restrictions_manager
 
 @restrictions_manager.register()
-def http_get_only(groupname, http_scheme, http_netloc, http_path,
+def http_method(groupname, http_scheme, http_netloc, http_path,
         http_query, http_fragment, http_username, http_password,
-        http_hostname, http_port, http_method, post_parameters,
+        http_hostname, http_port, http_method, http_data,
         restriction_params):
     \"\"\"
-    Only allows the user to do GET requests
+    Restricts the requests to http GET
     \"\"\"
-    return http_method == "GET"
+    allowed_method = restriction_params
+    return http_method == allowed_method
 
 @restrictions_manager.register(takes_extra_param=True)
 def restricted_ingredient(groupname, http_scheme, http_netloc, http_path,
         http_query, http_fragment, http_username, http_password,
-        http_hostname, http_port, http_method, post_parameters,
+        http_hostname, http_port, http_method, http_data,
         restriction_params):
     \"\"\"
     Restrict the ingredient argument to a given category
@@ -158,12 +159,6 @@ class OkAppTestCase(unittest.TestCase):
         self.assertIn("GROUPS_DB", body)
         response = self.app.get("/config/")
         self.assertEqual(body, json.loads(response.data))
-
-    def test_ok_url(self):
-        response = self.app.get("/ok/")
-        body = json.loads(response.data)
-        self.assertEqual(body["message"], "Expected a url argument")
-        self.assertEqual(response.status_code, 400)
 
     def test_users_url(self):
         response = self.app.get("/users/")
@@ -419,15 +414,15 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/restrictions/")
         self.assertEqual(response.status_code, 200)
 
-    def test_ok(self):
+    def test_ok_simple(self):
         response = self.app.get("/ok/?url=%2F&groups=admin")
         self.assertEqual(response.status_code, 200)
 
-    def test_ok_url_advanced_restrictions(self):
+    def test_ok_url_advanced_restrictions_user(self):
         with OkConfig(CONFIG_ADVANCED_RESTRICTIONS):
             myrestrictions = {
                     "/recipes": [
-                        ["http_get_only", None],
+                        ["http_method", "GET"],
                         ["restricted_ingredient", "fruits"]
                         ]
                     }
@@ -451,7 +446,42 @@ class OkAppTestCase(unittest.TestCase):
             self.assertEqual(response.status_code, 403)
             response = self.app.get("/ok/?url=" +
                     urlencode("/recipes?ingredient=apple") +
+                    "&groups=fruitlovers&http_method=POST")
+            self.assertEqual(response.status_code, 403)
+            response = self.app.get("/ok/?url=" +
+                    urlencode("/recipes?ingredient=apple") +
                     "&user=john")
+            self.assertEqual(response.status_code, 200)
+
+    def test_ok_url_advanced_restrictions_group(self):
+        with OkConfig(CONFIG_ADVANCED_RESTRICTIONS):
+            myrestrictions = {
+                    "/recipes": [
+                        ["http_method", "GET"],
+                        ["restricted_ingredient", "fruits"]
+                        ]
+                    }
+            response = self.app.post("/groups/fruitlovers",
+                    data={"restrictions": urlencode(json.dumps(myrestrictions))}
+                    )
+            self.assertEqual(response.status_code, 201)
+            response = self.app.get("/ok/?url=" + urlencode("/somepath") +
+                    "&groups=fruitlovers")
+            self.assertEqual(response.status_code, 403)
+            response = self.app.get("/ok/?url=" + urlencode("/recipes") +
+                    "&groups=fruitlovers")
+            self.assertEqual(response.status_code, 200)
+            response = self.app.get("/ok/?url=" +
+                    urlencode("/recipes?ingredient=eggplant") +
+                    "&groups=fruitlovers")
+            self.assertEqual(response.status_code, 403)
+            response = self.app.get("/ok/?url=" +
+                    urlencode("/recipes?ingredient=apple") +
+                    "&groups=fruitlovers&http_method=POST")
+            self.assertEqual(response.status_code, 403)
+            response = self.app.get("/ok/?url=" +
+                    urlencode("/recipes?ingredient=apple") +
+                    "&groups=fruitlovers")
             self.assertEqual(response.status_code, 200)
 
 class DictionaryTestCase():

@@ -32,7 +32,7 @@ restrictions_manager = RestrictionsManager()
 @restrictions_manager.register()
 def unrestricted(groupname, http_scheme, http_netloc, http_path,
         http_query, http_fragment, http_username, http_password,
-        http_hostname, http_port, http_method, post_parameters,
+        http_hostname, http_port, http_method, http_data,
         restriction_params):
     """
     Unconditional access

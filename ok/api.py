@@ -88,7 +88,8 @@ def ok():
     allowed or not.
 
     How to query:
-    GET /ok/?url=<url>&user=<user>&groups=<group-list>&http_method=<http_method>&post_parameters=<post_parameters>&auto_create=False&default_groups=<group-list>
+    GET
+    /ok/?url=<url>&user=<user>&groups=<group-list>&http_method=<http_method>&data=<data>
 
     Arguments:
     - url (mandatory):
@@ -99,13 +100,8 @@ def ok():
     The user who attempts to access the url
     - groups (optional)
     The groups the user belong to, separated by commas
-    - post_parameters (optional)
-    The post parameters (data type application/x-www-form-urlencoded)
-    - auto_create (optional)
-    If true (the default) the app will create the user if it does not exist
-    - default_groups (optional)
-    Unexisting users will be assumed to be in these groups. If auto_create
-    is true, the user will be created with these groups.
+    - data (optional)
+    The post/put data (assuming type application/x-www-form-urlencoded)
 
     All the arguments must be url-encoded. One of the parameters user or
     groups must be provided. If both are provided, the api call will
@@ -141,8 +137,8 @@ def ok():
     url_arg = flask.request.args.get("url", None)
     groups_arg = flask.request.args.get("groups", None)
     user_arg = flask.request.args.get("user", None)
-    http_method_arg = urldecode(flask.request.args.get("http_method", "GET"))
-    post_parameters_arg = flask.request.args.get("post_parameters", None)
+    http_method_arg = flask.request.args.get("http_method", None)
+    data_arg = flask.request.args.get("data", None)
 
     if url_arg is None:
         return json_response(400, "Expected a url argument")
@@ -163,17 +159,28 @@ def ok():
             group_list = urldecode(groups_arg).split(",")
         except TypeError:
             return json_response(400, "%s: unparsable groups" % groups_arg)
-    if post_parameters_arg:
+    data = {}
+    if data_arg is not None:
         try:
-            post_parameters = urllib.parse_qs(post_parameters_arg)
+            data = urllib.parse_qs(data_arg)
         except ValueError:
             return json_response(
                     400,
-                    "%s: unparsable post_parameters" % post_parameters
+                    "%s: unparsable data" % data_arg
+                    )
+    http_method = "GET"
+    if http_method_arg is not None:
+        try:
+            http_method = urldecode(http_method_arg)
+        except ValueError:
+            return json_response(
+                    400,
+                    "%s: unparsable http_method" % http_method_arg
                     )
     for group in group_list:
         if groups_db.get(group) is None:
             return json_response(404, "%s: unknown group" % group)
+
 
     url_parts = urlparse.urlsplit(url_arg)
 
@@ -222,8 +229,8 @@ def ok():
                             http_password=http_password,
                             http_hostname=http_hostname,
                             http_port=http_port,
-                            http_method=http_method_arg,
-                            post_parameters=post_parameters_arg,
+                            http_method=http_method,
+                            http_data=data,
                             restriction_params=restriction_params
                             ):
                         return json_response(403, "Restriction %s on %s"
