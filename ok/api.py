@@ -31,13 +31,12 @@ def get_groups_db():
     necessary).
     """
     if not hasattr(flask.g, "groups_db"):
-        first_run = not os.path.exists(app.config["GROUPS_DB"])
         groups_db = serializeddicts.JsonDict(app.config["GROUPS_DB"])
-        if first_run:
-            for groupname in app.config["DEFAULT_GROUPS"]:
+        groups_db["admin"] = { "/.*$" : [ [ "unrestricted", None ] ] }
+        for groupname in app.config["DEFAULT_GROUPS"]:
+            if groups_db.get(groupname) is None:
                 groups_db[groupname] = {}
         flask.g.groups_db = groups_db
-    flask.g.groups_db["admin"] = { "/.*$" : [ [ "unrestricted", None ] ] }
     return flask.g.groups_db
 
 def get_users_db():
@@ -173,8 +172,8 @@ def ok():
                     "%s: unparsable post_parameters" % post_parameters
                     )
     for group in group_list:
-        if not groups_db.get(group):
-            return json_response(404, "Group %s does not exist" % group)
+        if groups_db.get(group) is None:
+            return json_response(404, "%s: unknown group" % group)
 
     url_parts = urlparse.urlsplit(url_arg)
 
@@ -188,7 +187,7 @@ def ok():
     http_hostname = url_parts.hostname
     http_port = url_parts.port
 
-    if http_query:
+    if http_query is not None:
         try:
             http_query = urlparse.parse_qs(url_parts.query)
         except ValueError:

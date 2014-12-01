@@ -26,6 +26,42 @@ CONFIG_NO_AUTO_CREATE="""
 AUTO_CREATE=False
 """
 
+CONFIG_ADVANCED_RESTRICTIONS="""
+from ok.restrictions import restrictions_manager
+
+@restrictions_manager.register()
+def http_get_only(groupname, http_scheme, http_netloc, http_path,
+        http_query, http_fragment, http_username, http_password,
+        http_hostname, http_port, http_method, post_parameters,
+        restriction_params):
+    \"\"\"
+    Only allows the user to do GET requests
+    \"\"\"
+    return http_method == "GET"
+
+@restrictions_manager.register(takes_extra_param=True)
+def restricted_ingredient(groupname, http_scheme, http_netloc, http_path,
+        http_query, http_fragment, http_username, http_password,
+        http_hostname, http_port, http_method, post_parameters,
+        restriction_params):
+    \"\"\"
+    Restrict the ingredient argument to a given category
+    \"\"\"
+
+    categories = {
+        "fruits": ["banana", "apple"],
+        "vegetables": ["eggplant"]
+        }
+    ingredient = None
+    ingredient_list = http_query.get("ingredient", None)
+    if ingredient_list is not None:
+        ingredient = ingredient_list[-1]
+    category = restriction_params
+    if ingredient is not None:
+        return ingredient in categories[category]
+    return True
+"""
+
 def urlencode(s):
     return urllib2.quote(s.encode("utf-8"))
 
@@ -58,6 +94,16 @@ class OkConfig:
                 ok.restrictions.restrictions_manager.func_map.keys():
             if restriction not in self.registered_restrictions:
                 del ok.restrictions.restrictions_manager.func_map[restriction]
+
+    def load_text_config(self):
+        fd, config_file = tempfile.mkstemp(suffix='.py')
+        os.close(fd)
+        os.unlink(config_file)
+        with open(config_file, "wb") as f:
+            f.write(self.config_text)
+        os.environ["OK_CONFIG"] = config_file
+        ok.app.config.from_envvar("OK_CONFIG")
+        os.unlink(config_file)
 
     def load_text_config(self):
         fd, config_file = tempfile.mkstemp(suffix='.py')
@@ -377,6 +423,36 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/ok/?url=%2F&groups=admin")
         self.assertEqual(response.status_code, 200)
 
+    def test_ok_url_advanced_restrictions(self):
+        with OkConfig(CONFIG_ADVANCED_RESTRICTIONS):
+            myrestrictions = {
+                    "/recipes": [
+                        ["http_get_only", None],
+                        ["restricted_ingredient", "fruits"]
+                        ]
+                    }
+            response = self.app.post("/groups/fruitlovers",
+                    data={"restrictions": urlencode(json.dumps(myrestrictions))}
+                    )
+            self.assertEqual(response.status_code, 201)
+            response = self.app.post("/users/john",
+                    data={"groups": "fruitlovers"}
+                    )
+            self.assertEqual(response.status_code, 201)
+            response = self.app.get("/ok/?url=" + urlencode("/somepath") +
+                    "&user=john")
+            self.assertEqual(response.status_code, 403)
+            response = self.app.get("/ok/?url=" + urlencode("/recipes") +
+                    "&user=john")
+            self.assertEqual(response.status_code, 200)
+            response = self.app.get("/ok/?url=" +
+                    urlencode("/recipes?ingredient=eggplant") +
+                    "&user=john")
+            self.assertEqual(response.status_code, 403)
+            response = self.app.get("/ok/?url=" +
+                    urlencode("/recipes?ingredient=apple") +
+                    "&user=john")
+            self.assertEqual(response.status_code, 200)
 
 class DictionaryTestCase():
 
