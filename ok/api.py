@@ -277,10 +277,10 @@ def users(username=None):
         if flask.request.method in ("POST", "PUT"):
 
             if flask.request.method == "POST":
-                if users_db.get(username):
+                if users_db.get(username) is not None:
                     return json_response(400, "%s: user already exists")
             if flask.request.method == "PUT":
-                if not users_db.get(username):
+                if users_db.get(username) is None:
                     return json_response(404, "%s: unknown user")
 
             try:
@@ -371,15 +371,14 @@ def groups(groupname=None):
         if flask.request.method in ("POST", "PUT"):
 
             if flask.request.method == "POST":
-                if groups_db.get(groupname):
+                if groups_db.get(groupname) is not None:
                     return json_response(400, "%s: group already exists")
             if flask.request.method == "PUT":
                 if groups_db.get(groupname) is None:
                     return json_response(404, "%s: unknown group")
 
             try:
-                restrictions_arg = flask.request.form.get("restrictions",
-                        None)
+                restrictions_arg = flask.request.form.get("restrictions", None)
                 if restrictions_arg is None:
                     path_restrictions = {}
                 else:

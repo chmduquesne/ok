@@ -5,6 +5,7 @@ import unittest
 import json
 import tempfile
 import shutil
+import urllib2
 
 CONFIG_USER_DEFINED_RESTRICTION="""
 from ok.restrictions import restrictions_manager
@@ -24,6 +25,9 @@ DEFAULT_GROUPS=["default", "all"]
 CONFIG_NO_AUTO_CREATE="""
 AUTO_CREATE=False
 """
+
+def urlencode(s):
+    return urllib2.quote(s.encode("utf-8"))
 
 class OkConfig:
     """
@@ -280,12 +284,44 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/groups/doesnotexist")
         self.assertEquals(response.status_code, 404)
 
-    def test_groups_url_create_empty_group(self):
+    def test_groups_url_post_empty_group(self):
         response = self.app.post("/groups/emptygroup")
         self.assertEquals(response.status_code, 201)
         response = self.app.get("/groups/emptygroup")
         self.assertEquals(response.status_code, 200)
         self.assertEquals(json.loads(response.data), dict())
+
+    def test_groups_url_post_group_twice(self):
+        response = self.app.get("/groups/mygroup")
+        self.assertEquals(response.status_code, 404)
+        response = self.app.post("/groups/mygroup")
+        self.assertEquals(response.status_code, 201)
+        response = self.app.get("/groups/mygroup")
+        self.assertEquals(response.status_code, 200)
+        response = self.app.post("/groups/mygroup")
+        self.assertEquals(response.status_code, 400)
+
+    def test_groups_url_post_group(self):
+        myrestrictions = {
+                "/foo": [["unrestricted", None]],
+                "/bar": [["unrestricted", None]]
+                }
+        response = self.app.post("/groups/mygroup",
+                data={"restrictions": urlencode(json.dumps(myrestrictions))}
+                )
+        self.assertEquals(response.status_code, 201)
+        response = self.app.get("/groups/mygroup")
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(json.loads(response.data), myrestrictions)
+
+    def test_groups_url_post_group_unknown_restriction(self):
+        myrestrictions = {
+                "/foo": [["unknownrestriction", None]]
+                }
+        response = self.app.post("/groups/mygroup",
+                data={"restrictions": urlencode(json.dumps(myrestrictions))}
+                )
+        self.assertEquals(response.status_code, 404)
 
     def test_restrictions_url(self):
         response = self.app.get("/restrictions/")
