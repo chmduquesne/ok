@@ -230,7 +230,7 @@ class OkAppTestCase(unittest.TestCase):
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         response = self.app.delete("/users/john")
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, 200)
 
     def test_users_url_update_unexisting_user(self):
         response = self.app.get("/users/john")
@@ -322,6 +322,52 @@ class OkAppTestCase(unittest.TestCase):
                 data={"restrictions": urlencode(json.dumps(myrestrictions))}
                 )
         self.assertEquals(response.status_code, 404)
+
+    def test_groups_url_put_unknown_group(self):
+        response = self.app.put("/groups/doesnotexist")
+        self.assertEquals(response.status_code, 404)
+
+    def test_groups_url_put_group(self):
+        response = self.app.post("/groups/mygroup")
+        self.assertEquals(response.status_code, 201)
+        response = self.app.get("/groups/mygroup")
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(json.loads(response.data), dict())
+        myrestrictions = {
+                "/foo": [["unrestricted", None]],
+                "/bar": [["unrestricted", None]]
+                }
+        response = self.app.put("/groups/mygroup",
+                data={"restrictions": urlencode(json.dumps(myrestrictions))}
+                )
+        self.assertEquals(response.status_code, 200)
+        response = self.app.get("/groups/mygroup")
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(json.loads(response.data), myrestrictions)
+
+    def test_groups_url_delete_unknown_group(self):
+        response = self.app.delete("/groups/unknown")
+        self.assertEquals(response.status_code, 404)
+
+    def test_groups_url_delete_group(self):
+        response = self.app.post("/groups/mygroup")
+        self.assertEquals(response.status_code, 201)
+        response = self.app.delete("/groups/mygroup")
+        self.assertEquals(response.status_code, 200)
+
+    def test_groups_url_delete_group_also_remove_from_users(self):
+        response = self.app.post("/users/john", data={"groups":"mygroup"})
+        self.assertEquals(response.status_code, 201)
+        response = self.app.get("/users/john")
+        self.assertEquals(response.status_code, 200)
+        self.assertIn("mygroup", json.loads(response.data)["groups"])
+        response = self.app.get("/groups/mygroup")
+        self.assertEquals(response.status_code, 200)
+        response = self.app.delete("/groups/mygroup")
+        self.assertEquals(response.status_code, 200)
+        response = self.app.get("/users/john")
+        self.assertEquals(response.status_code, 200)
+        self.assertNotIn("mygroup", json.loads(response.data)["groups"])
 
     def test_restrictions_url(self):
         response = self.app.get("/restrictions/")

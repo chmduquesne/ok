@@ -316,7 +316,7 @@ def users(username=None):
             if user is None:
                 return json_response(404, "%s: unknown user" % username)
             del users_db[username]
-            return json_response(204, "/users/%s deleted" % username)
+            return json_response(200, "/users/%s deleted" % username)
 
 @app.route("/groups/")
 @app.route("/groups/<groupname>", methods=["GET", "POST", "DELETE", "PUT"])
@@ -417,7 +417,7 @@ def groups(groupname=None):
                 if groupname in groups["groups"]:
                     groups["groups"].remove(groupname)
                     users_db[username] = groups
-            return json_response(204, "/groups/%s deleted" % groupname)
+            return json_response(200, "/groups/%s deleted" % groupname)
 
 @app.route("/restrictions/")
 @app.route("/restrictions/<restrictionname>")
