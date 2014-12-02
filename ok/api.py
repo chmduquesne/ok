@@ -46,7 +46,6 @@ def load_config_from_envvar(varname, silent=True):
     try:
         sys.path.insert(0, dirname)
         config = __import__(modulename)
-        reload(config)
         for attr in dir(config):
             if attr.isupper():
                 app.config[attr] = getattr(config, attr)
@@ -127,8 +126,7 @@ def ok():
     allowed or not.
 
     How to query:
-    GET
-    /ok/?url=<url>&user=<user>&groups=<group-list>&http_method=<http_method>&data=<data>
+    GET /ok/?url=<url>&user=<user>&groups=<group-list>&http_method=<http_method>&data=<data>
 
     Arguments:
     - url (mandatory):
@@ -191,7 +189,7 @@ def ok():
                     "groups": app.config["DEFAULT_GROUPS"]
                     }
             else:
-                return json_response(400, "%s: unkown user" % username)
+                return json_response(403, "%s: unkown user" % username)
         group_list = users_db[username]["groups"]
     else:
         try:
@@ -218,7 +216,7 @@ def ok():
                 )
     for group in group_list:
         if groups_db.get(group) is None:
-            return json_response(404, "%s: unknown group" % group)
+            return json_response(403, "%s: unknown group" % group)
 
     url_parts = urlparse.urlsplit(url_arg)
 
