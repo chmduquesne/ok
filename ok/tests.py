@@ -74,9 +74,15 @@ class OkConfig:
         >>> with OkConfig(sometext):
         >>>     do_stuff()
     """
-
     def __init__(self, config_text):
-        self.config_text = config_text
+        self.config_file = self.mktemp()
+        with open(self.config_file, "wb") as f:
+            f.write(config_text)
+
+    def mktemp(self):
+        fd, filename = tempfile.mkstemp(suffix='.py')
+        os.close(fd)
+        return filename
 
     def save_app_config(self):
         self.saved_config = dict(
@@ -86,35 +92,19 @@ class OkConfig:
                 AUTO_CREATE=ok.app.config["AUTO_CREATE"],
                 DEFAULT_GROUPS=ok.app.config["DEFAULT_GROUPS"]
                 )
-        self.registered_restrictions = \
+        self.saved_restrictions = \
                 ok.restrictions.restrictions_manager.func_map.keys()
 
     def restore_app_config(self):
         ok.app.config.update(self.saved_config)
         for restriction in \
                 ok.restrictions.restrictions_manager.func_map.keys():
-            if restriction not in self.registered_restrictions:
+            if restriction not in self.saved_restrictions:
                 del ok.restrictions.restrictions_manager.func_map[restriction]
 
     def load_text_config(self):
-        fd, config_file = tempfile.mkstemp(suffix='.py')
-        os.close(fd)
-        os.unlink(config_file)
-        with open(config_file, "wb") as f:
-            f.write(self.config_text)
-        os.environ["OK_CONFIG"] = config_file
+        os.environ["OK_CONFIG"] = self.config_file
         ok.app.config.from_envvar("OK_CONFIG")
-        os.unlink(config_file)
-
-    def load_text_config(self):
-        fd, config_file = tempfile.mkstemp(suffix='.py')
-        os.close(fd)
-        os.unlink(config_file)
-        with open(config_file, "wb") as f:
-            f.write(self.config_text)
-        os.environ["OK_CONFIG"] = config_file
-        ok.app.config.from_envvar("OK_CONFIG")
-        os.unlink(config_file)
 
     def __enter__(self):
         self.save_app_config()
@@ -122,6 +112,7 @@ class OkConfig:
 
     def __exit__(self, type, value, traceback):
         self.restore_app_config()
+        os.unlink(self.config_file)
 
 class OkAppTestCase(unittest.TestCase):
 
