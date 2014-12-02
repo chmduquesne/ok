@@ -114,7 +114,7 @@ def json_response(status, body={}):
     return response
 
 
-def describe_rights(groups):
+def describe(groups):
     return {}
 
 
@@ -205,7 +205,7 @@ def ok():
                 400,
                 "%s: unparsable data" % data_arg
                 )
-    http_method = "GET"
+    http_method = None
     if http_method_arg is not None:
         try:
             http_method = urldecode(http_method_arg)
@@ -273,7 +273,7 @@ def ok():
                                              (restrictionname, path_pattern))
         # We need to find at least one matching path
         if match_found:
-            return json_response(200, describe_rights(group_list))
+            return json_response(200, describe(group_list))
 
     return json_response(403, "Not allowed (no matching path on any group)")
 

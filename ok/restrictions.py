@@ -39,8 +39,14 @@ class RestrictionsManager():
             pass
 
     def all(self):
-        return dict([(key, self.func_map[key]["function"].__doc__) for key
-                     in self.func_map])
+        res = {}
+        for func_name in self.func_map:
+            res[func_name] = {
+                "doc": self.func_map[func_name]["function"].__doc__,
+                "takes_extra_param":
+                self.func_map[func_name]["takes_extra_param"]
+                }
+        return res
 
 
 restrictions_manager = RestrictionsManager()
@@ -69,6 +75,9 @@ def http_methods(groupname, http_scheme, http_netloc, http_path,
     Expected parameter: a list (ex: ["GET", "POST"])
     """
     allowed_methods = restriction_params
+
+    if http_method is None:
+        http_method="GET"
 
     return http_method in allowed_methods
 
