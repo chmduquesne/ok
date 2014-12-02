@@ -23,7 +23,38 @@ app.config.update(dict(
     AUTO_CREATE=True,
     DEFAULT_GROUPS=["users"]
     ))
-app.config.from_envvar("OK_CONFIG", silent=True)
+
+def load_config_from_envvar(varname, silent=True):
+    """
+    This function replaces app.config.from_envvar
+
+    The reason why it was written was to allow references to allow actual
+    import of the user code in the config. app.config.from_envvar is too
+    limited in that regards, and functions that references to local
+    variables within the file would be otherwise lost.
+    """
+    config_path = os.getenv(varname)
+    if config_path is None:
+        return
+    if not os.path.exists(config_path):
+        return
+    dirname = os.path.dirname(config_path)
+    pyfile = os.path.basename(config_path)
+    modulename = os.path.splitext(pyfile)[0]
+    syspath=list(sys.path)
+    try:
+        sys.path.insert(0, dirname)
+        config = __import__(modulename)
+        reload(config)
+        for attr in dir(config):
+            if attr.isupper():
+                app.config[attr] = getattr(config, attr)
+    except ImportError:
+        pass
+    finally:
+        sys.path[:] = syspath
+
+load_config_from_envvar("OK_CONFIG", silent=True)
 
 def get_groups_db():
     """

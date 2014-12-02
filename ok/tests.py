@@ -40,6 +40,11 @@ def http_method(groupname, http_scheme, http_netloc, http_path,
     allowed_method = restriction_params
     return http_method == allowed_method
 
+categories = {
+    "fruits": ["banana", "apple"],
+    "vegetables": ["eggplant"]
+    }
+
 @restrictions_manager.register(takes_extra_param=True)
 def restricted_ingredient(groupname, http_scheme, http_netloc, http_path,
         http_query, http_fragment, http_username, http_password,
@@ -49,14 +54,13 @@ def restricted_ingredient(groupname, http_scheme, http_netloc, http_path,
     Restrict the ingredient argument to a given category
     \"\"\"
 
-    categories = {
-        "fruits": ["banana", "apple"],
-        "vegetables": ["eggplant"]
-        }
-    ingredient = None
-    ingredient_list = http_query.get("ingredient", None)
-    if ingredient_list is not None:
-        ingredient = ingredient_list[-1]
+    # http_query is a dictionary <name> => <list>, where <name> are the
+    # name of the parameters, and <list> are all the occurrences of this
+    # parameter in the url, such that ?name=foo&name=bar returns the
+    # dictionary {"name", ["foo", "bar"]}. The following snippet gets the
+    # last occurrence.
+    ingredient = http_query.get("ingredient", [None])[-1]
+
     category = restriction_params
     if ingredient is not None:
         return ingredient in categories[category]
@@ -104,7 +108,8 @@ class OkConfig:
 
     def load_text_config(self):
         os.environ["OK_CONFIG"] = self.config_file
-        ok.app.config.from_envvar("OK_CONFIG")
+        ok.api.load_config_from_envvar("OK_CONFIG")
+        #ok.app.config.from_envvar("OK_CONFIG")
 
     def __enter__(self):
         self.save_app_config()
