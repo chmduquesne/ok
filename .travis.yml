@@ -4,11 +4,8 @@ before_install:
 install:
     - sudo apt-get install -qq gcc g++ build-essential libkyotocabinet-dev
     - sudo apt-get install -qq python3
+    - sudo python setup.py install
 python:
     - 2.7
-before_script:
-    - sudo pip install virtualenv
-    - virtualenv -p python2 venv
-    - venv/bin/pip install -r requirements.txt
 script:
     - ./ok-serve -t
