@@ -7,7 +7,11 @@ import tempfile
 import shutil
 import urllib2
 
-CONFIG_USER_DEFINED_RESTRICTION="""
+##
+# Tests configurations
+##
+
+CUSTOM_RESTRICTION="""
 from ok.restrictions import restrictions_manager
 
 @restrictions_manager.register()
@@ -18,15 +22,15 @@ def myrestriction(*args, **kwargs):
     return False
 """
 
-CONFIG_CUSTOMIZED_DEFAULT_GROUPS="""
+CUSTOMIZED_DEFAULT_GROUPS="""
 DEFAULT_GROUPS=["default", "all"]
 """
 
-CONFIG_NO_AUTO_CREATE="""
+NO_AUTO_CREATE="""
 AUTO_CREATE=False
 """
 
-CONFIG_ADVANCED_RESTRICTIONS="""
+ADVANCED_RESTRICTIONS="""
 from ok.restrictions import restrictions_manager
 
 @restrictions_manager.register()
@@ -54,11 +58,11 @@ def restricted_ingredient(groupname, http_scheme, http_netloc, http_path,
     Restrict the ingredient argument to a given category
     \"\"\"
 
-    # http_query is a dictionary <name> => <list>, where <name> are the
-    # name of the parameters, and <list> are all the occurrences of this
+    # http_query is a dictionary <name> => <list>, where <name> is a
+    # parameter name, and <list> are all the occurrences of this
     # parameter in the url, such that ?name=foo&name=bar returns the
     # dictionary {"name", ["foo", "bar"]}. The following snippet gets the
-    # last occurrence.
+    # last occurrence
     ingredient = http_query.get("ingredient", [None])[-1]
 
     category = restriction_params
@@ -66,6 +70,10 @@ def restricted_ingredient(groupname, http_scheme, http_netloc, http_path,
         return ingredient in categories[category]
     return True
 """
+
+##
+# Helpers
+##
 
 def urlencode(s):
     return urllib2.quote(s.encode("utf-8"))
@@ -119,6 +127,10 @@ class OkConfig:
         self.restore_app_config()
         os.unlink(self.config_file)
 
+##
+# Test cases
+##
+
 class OkAppTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -142,7 +154,7 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/restrictions/")
         body = json.loads(response.data)
         self.assertNotIn("myrestriction", body)
-        with OkConfig(CONFIG_USER_DEFINED_RESTRICTION):
+        with OkConfig(CUSTOM_RESTRICTION):
             response = self.app.get("/restrictions/")
             body = json.loads(response.data)
             self.assertIn("myrestriction", body)
@@ -180,7 +192,7 @@ class OkAppTestCase(unittest.TestCase):
             self.assertIn(g, body["groups"])
 
     def test_users_url_post_user_no_auto_create(self):
-        with OkConfig(CONFIG_NO_AUTO_CREATE):
+        with OkConfig(NO_AUTO_CREATE):
             response = self.app.get("/users/john")
             body = json.loads(response.data)
             self.assertEqual(response.status_code, 404)
@@ -193,7 +205,7 @@ class OkAppTestCase(unittest.TestCase):
                 self.assertIn(g, body["groups"])
 
     def test_users_url_post_user_customized_default_groups(self):
-        with OkConfig(CONFIG_CUSTOMIZED_DEFAULT_GROUPS):
+        with OkConfig(CUSTOMIZED_DEFAULT_GROUPS):
             response = self.app.get("/users/john")
             body = json.loads(response.data)
             self.assertEqual(response.status_code, 404)
@@ -238,7 +250,7 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEqual(body, dict())
 
     def test_users_url_post_user_unexisting_group_no_autocreate(self):
-        with OkConfig(CONFIG_NO_AUTO_CREATE):
+        with OkConfig(NO_AUTO_CREATE):
             response = self.app.get("/groups/unexisting")
             self.assertEqual(response.status_code, 404)
             response = self.app.get("/users/john")
@@ -415,7 +427,7 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_ok_url_advanced_restrictions_user(self):
-        with OkConfig(CONFIG_ADVANCED_RESTRICTIONS):
+        with OkConfig(ADVANCED_RESTRICTIONS):
             myrestrictions = {
                     "/recipes": [
                         ["http_method", "GET"],
@@ -450,7 +462,7 @@ class OkAppTestCase(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
 
     def test_ok_url_advanced_restrictions_group(self):
-        with OkConfig(CONFIG_ADVANCED_RESTRICTIONS):
+        with OkConfig(ADVANCED_RESTRICTIONS):
             myrestrictions = {
                     "/recipes": [
                         ["http_method", "GET"],
