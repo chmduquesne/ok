@@ -4,6 +4,7 @@ import json
 import sys
 import os
 
+
 class DBOpen():
     """
     Allows to perform cleanly an operation on a KyotoCabinet database:
@@ -27,6 +28,7 @@ class DBOpen():
     def __exit__(self, type, value, traceback):
         if not self.db.close():
             raise OSError(str(self.db.error()))
+
 
 class KyotoCabinetDict(dict):
     """
@@ -115,6 +117,7 @@ class KyotoCabinetDict(dict):
     def has_key(self, key):
         return key in self
 
+
 class JsonDict(dict):
 
     def save_to_disk(self):
@@ -147,57 +150,3 @@ class JsonDict(dict):
         res = super(JsonDict, self).clear(*args, **kwargs)
         self.save_to_disk()
         return res
-
-def print_kyotocabinetdict(db):
-    print '{'
-    for k in db:
-        v = db[k]
-        print '    %s (%s): %s (%s)' % (k, type(k), v, type(v))
-    print '}'
-
-def test():
-    print "create empty dict"
-    #db = KyotoCabinetDict("test.kch")
-    db = JsonDict("test.json")
-    print_kyotocabinetdict(db)
-    print "add a=b, c=d"
-    db["a"] = { "key": "value" }
-    db["c"] = "d"
-    print_kyotocabinetdict(db)
-    print "%s => %s" % ("a", db["a"])
-    print "%s => %s" % ("c", db["c"])
-    print "length of db"
-    print len(db)
-    print "deleting key c, showing length"
-    del db["c"]
-    print len(db)
-    print "re-deleting key c, showing error"
-    try:
-        del db["c"]
-    except KeyError:
-        print "getting KeyError"
-    print "Checking if a in keys"
-    if "a" in db:
-        print "yes"
-    else:
-        print "no"
-    print "readding c=d"
-    db["c"] = "d"
-
-    print "iterating on keys"
-    for key in iter(db):
-        print key
-    print "iterating on keys and values"
-    for k, v in db.iteritems():
-        print k, v
-    print "again, on keys and values with items"
-    for k, v in db.items():
-        print k, v
-    print "getting unexisting key, or '<missing>'"
-    print db.get("missing", '<missing>')
-    print "clearing db, showing len"
-    db.clear()
-    print len(db)
-
-if __name__ == "__main__":
-    test()

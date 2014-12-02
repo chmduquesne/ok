@@ -24,6 +24,7 @@ app.config.update(dict(
     DEFAULT_GROUPS=["users"]
     ))
 
+
 def load_config_from_envvar(varname, silent=True):
     """
     This function replaces app.config.from_envvar
@@ -41,7 +42,7 @@ def load_config_from_envvar(varname, silent=True):
     dirname = os.path.dirname(config_path)
     pyfile = os.path.basename(config_path)
     modulename = os.path.splitext(pyfile)[0]
-    syspath=list(sys.path)
+    syspath = list(sys.path)
     try:
         sys.path.insert(0, dirname)
         config = __import__(modulename)
@@ -56,6 +57,7 @@ def load_config_from_envvar(varname, silent=True):
 
 load_config_from_envvar("OK_CONFIG", silent=True)
 
+
 def get_groups_db():
     """
     Returns the group database from the application context (creates it if
@@ -63,12 +65,13 @@ def get_groups_db():
     """
     if not hasattr(flask.g, "groups_db"):
         groups_db = serializeddicts.JsonDict(app.config["GROUPS_DB"])
-        groups_db["admin"] = { "/.*$" : [ [ "unrestricted", None ] ] }
+        groups_db["admin"] = {"/.*$": [["unrestricted", None]]}
         for groupname in app.config["DEFAULT_GROUPS"]:
             if groups_db.get(groupname) is None:
                 groups_db[groupname] = {}
         flask.g.groups_db = groups_db
     return flask.g.groups_db
+
 
 def get_users_db():
     """
@@ -76,9 +79,11 @@ def get_users_db():
     necessary).
     """
     if not hasattr(flask.g, "users_db"):
-        flask.g.users_db = \
-                serializeddicts.KyotoCabinetDict(app.config["USERS_DB"])
+        flask.g.users_db = serializeddicts.KyotoCabinetDict(
+            app.config["USERS_DB"]
+            )
     return flask.g.users_db
+
 
 def urldecode(s):
     """
@@ -86,30 +91,33 @@ def urldecode(s):
     """
     return urllib2.unquote(s).decode('utf-8')
 
+
 def json_response(status, body={}):
     """
     Builds a response object with the content type set to json
     """
     status_message = {
-            200: "OK",
-            201: "Created",
-            204: "No Content",
-            400: "Bad Request",
-            403: "Forbidden",
-            404: "Not found",
-            413: "Request entity too large",
-            429: "Too many requests",
-            500: "Internal error"
-            }
+        200: "OK",
+        201: "Created",
+        204: "No Content",
+        400: "Bad Request",
+        403: "Forbidden",
+        404: "Not found",
+        413: "Request entity too large",
+        429: "Too many requests",
+        500: "Internal error"
+        }
     if not isinstance(body, dict):
-        body = { "message": body }
+        body = {"message": body}
     body["status"] = status_message[status]
     response = flask.jsonify(body)
     response.status = str(status)
     return response
 
+
 def describe_rights(groups):
     return {}
+
 
 @app.route("/ok/")
 def ok():
@@ -180,8 +188,8 @@ def ok():
         if not users_db.get(username):
             if app.config["AUTO_CREATE"]:
                 users_db[username] = {
-                        "groups": app.config["DEFAULT_GROUPS"]
-                        }
+                    "groups": app.config["DEFAULT_GROUPS"]
+                    }
             else:
                 return json_response(400, "%s: unkown user" % username)
         group_list = users_db[username]["groups"]
@@ -196,22 +204,21 @@ def ok():
             data = urllib.parse_qs(data_arg)
         except ValueError:
             return json_response(
-                    400,
-                    "%s: unparsable data" % data_arg
-                    )
+                400,
+                "%s: unparsable data" % data_arg
+                )
     http_method = "GET"
     if http_method_arg is not None:
         try:
             http_method = urldecode(http_method_arg)
         except ValueError:
             return json_response(
-                    400,
-                    "%s: unparsable http_method" % http_method_arg
-                    )
+                400,
+                "%s: unparsable http_method" % http_method_arg
+                )
     for group in group_list:
         if groups_db.get(group) is None:
             return json_response(404, "%s: unknown group" % group)
-
 
     url_parts = urlparse.urlsplit(url_arg)
 
@@ -219,7 +226,7 @@ def ok():
     http_netloc = url_parts.netloc
     http_path = url_parts.path
     http_query = url_parts.query
-    http_fragment = url_parts.fragment # should always be None
+    http_fragment = url_parts.fragment  # should always be None
     http_username = url_parts.username
     http_password = url_parts.password
     http_hostname = url_parts.hostname
@@ -230,8 +237,8 @@ def ok():
             http_query = urlparse.parse_qs(url_parts.query)
         except ValueError:
             return json_response(
-                    400, "%s: unparsable http_query" % http_query
-                    )
+                400, "%s: unparsable http_query" % http_query
+                )
 
     # For each groups, we go through all the path patterns.
     for group in group_list:
@@ -246,9 +253,9 @@ def ok():
                         rule = restrictions_manager.get(restrictionname)
                     except KeyError:
                         return json_response(
-                                500,
-                                "%s: unknown restriction" % restrictionname
-                                )
+                            500,
+                            "%s: unknown restriction" % restrictionname
+                            )
                     if not rule.applies(
                             groupname=group,
                             http_scheme=http_scheme,
@@ -264,13 +271,14 @@ def ok():
                             http_data=data,
                             restriction_params=restriction_params
                             ):
-                        return json_response(403, "Restriction %s on %s"
-                                % (restrictionname, path_pattern))
+                        return json_response(403, "Restriction %s on %s" %
+                                             (restrictionname, path_pattern))
         # We need to find at least one matching path
         if match_found:
             return json_response(200, describe_rights(group_list))
 
     return json_response(403, "Not allowed (no matching path on any group)")
+
 
 @app.route("/users/")
 @app.route("/users/<username>", methods=["GET", "POST", "DELETE", "PUT"])
@@ -328,7 +336,7 @@ def users(username=None):
                     group_list = groups_arg.split(",")
             except TypeError:
                 return json_response(400, "%s: unparsable groups" %
-                        groups_arg)
+                                     groups_arg)
             for groupname in app.config["DEFAULT_GROUPS"]:
                 if groupname not in group_list:
                     group_list.append(groupname)
@@ -340,9 +348,9 @@ def users(username=None):
                         groups_db[groupname] = {}
                     else:
                         return json_response(404, "%s: unknown group" %
-                                groupname)
+                                             groupname)
 
-            users_db[username] = { "groups": group_list }
+            users_db[username] = {"groups": group_list}
 
             if flask.request.method == "POST":
                 return json_response(201, "%s: user created" % username)
@@ -354,6 +362,7 @@ def users(username=None):
                 return json_response(404, "%s: unknown user" % username)
             del users_db[username]
             return json_response(200, "/users/%s deleted" % username)
+
 
 @app.route("/groups/")
 @app.route("/groups/<groupname>", methods=["GET", "POST", "DELETE", "PUT"])
@@ -420,31 +429,32 @@ def groups(groupname=None):
                     path_restrictions = {}
                 else:
                     path_restrictions = dict(
-                            json.loads(urldecode(restrictions_arg))
-                            )
+                        json.loads(urldecode(restrictions_arg))
+                        )
             except TypeError:
                 return json_response(
-                        400, "Could not parse provided restrictions %s" %
-                        restrictions_arg
-                        )
-            for path_pattern, restriction_list in path_restrictions.iteritems():
+                    400, "Could not parse provided restrictions %s" %
+                    restrictions_arg
+                    )
+            for path_pattern, restriction_list in \
+                    path_restrictions.iteritems():
                 for restrictionname, restriction_params in restriction_list:
                     if restrictionname not in restrictions_manager.all():
                         return json_response(
-                                404, "%s: unknown restriction" %
-                                restrictionname
-                                )
+                            404, "%s: unknown restriction" %
+                            restrictionname
+                            )
 
             groups_db[groupname] = path_restrictions
 
             if flask.request.method == "POST":
                 return json_response(
-                        201, "%s: group created" % groupname
-                        )
+                    201, "%s: group created" % groupname
+                    )
             if flask.request.method == "PUT":
                 return json_response(
-                        200, "%s: group updated" % groupname
-                        )
+                    200, "%s: group updated" % groupname
+                    )
         if flask.request.method == "DELETE":
             if group is None:
                 return json_response(404, "%s: unknown group" % groupname)
@@ -455,6 +465,7 @@ def groups(groupname=None):
                     groups["groups"].remove(groupname)
                     users_db[username] = groups
             return json_response(200, "/groups/%s deleted" % groupname)
+
 
 @app.route("/restrictions/")
 @app.route("/restrictions/<restrictionname>")
@@ -473,10 +484,11 @@ def restrictions(restrictionname=None):
         description = restrictions_manager.all().get(restrictionname)
         if description is None:
             return json_response(
-                    404, "%s: unknown restriction" % restrictionname
-                    )
+                404, "%s: unknown restriction" % restrictionname
+                )
         else:
-            return json_response(200, { "description" : description })
+            return json_response(200, {"description": description})
+
 
 @app.route("/")
 @app.route("/config/")
@@ -487,13 +499,14 @@ def app_info():
     res["links"] = "/help/"
     return flask.jsonify(res)
 
+
 @app.route("/help/")
 @app.route("/help/<endpoint>")
 def help(endpoint=None):
     """Help for the developers"""
     if endpoint is None:
-        all_endpoints = [ rule.endpoint for rule in
-                app.url_map.iter_rules() if rule.endpoint != "static" ]
+        all_endpoints = [rule.endpoint for rule in
+                         app.url_map.iter_rules() if rule.endpoint != "static"]
         links = dict()
         for e in all_endpoints:
             links[e] = "/help/%s" % e

@@ -422,7 +422,7 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/restrictions/")
         self.assertEqual(response.status_code, 200)
 
-    def test_ok_simple(self):
+    def test_ok_url_simple(self):
         response = self.app.get("/ok/?url=%2F&groups=admin")
         self.assertEqual(response.status_code, 200)
 
