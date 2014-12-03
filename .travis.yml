@@ -4,8 +4,13 @@ before_install:
 install:
     - sudo apt-get install -qq gcc g++ build-essential libkyotocabinet-dev
     - sudo apt-get install -qq python3
-    - sudo python setup.py install
+    - sudo pip install virtualenv
+    - sudo pip install coveralls
+    - virtualenv venv
+    - venv/bin/pip install -r requirements.txt
 python:
     - 2.7
 script:
-    - ./ok-serve -t
+    - coverage run ok-serve --test
+after_success:
+    - coveralls
