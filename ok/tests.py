@@ -162,6 +162,13 @@ class OkAppTestCase(unittest.TestCase):
             AUTO_CREATE=ok.app.config["AUTO_CREATE"],
             DEFAULT_GROUPS=ok.app.config["DEFAULT_GROUPS"]), config)
 
+    def test_forget_restriction(self):
+        with OkConfig(CUSTOM_RESTRICTION):
+            rule = ok.restrictions.restrictions_manager.get("myrestriction")
+            ok.restrictions.restrictions_manager.forget("myrestriction")
+            with self.assertRaises(KeyError):
+                rule = ok.restrictions.restrictions_manager.get("myrestriction")
+
     def test_import_restriction(self):
         response = self.app.get("/restrictions/")
         body = json.loads(response.data)
