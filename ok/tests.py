@@ -451,6 +451,18 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/restrictions/")
         self.assertEqual(response.status_code, 200)
 
+    def test_restrictions_url_get_restriction(self):
+        response = self.app.get("/restrictions/unrestricted")
+        self.assertEqual(response.status_code, 200)
+
+    def test_restrictions_url_get_unexisting_restriction(self):
+        response = self.app.get("/restrictions/idontexist")
+        self.assertEqual(response.status_code, 404)
+
+    def test_help_url(self):
+        response = self.app.get("/help")
+        self.assertEqual(response.status_code, 200)
+
     def test_ok_url_simple(self):
         response = self.app.get("/ok/?url=" + urlencode("/") + "&groups=admin")
         self.assertEqual(response.status_code, 200)
