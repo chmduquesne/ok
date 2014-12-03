@@ -146,6 +146,11 @@ class OkAppTestCase(unittest.TestCase):
             self.assertEqual(ok.app.config["AUTO_CREATE"], False)
         self.assertEqual(ok.app.config["AUTO_CREATE"], True)
 
+    def test_import_non_existing_config(self):
+        ok.api.load_config_from_envvar("IDONTEXIST")
+        with self.assertRaises(RuntimeError):
+            ok.api.load_config_from_envvar("IDONTEXIST", silent=False)
+
     def test_load_unexisting_config(self):
         os.environ["OK_CONFIG"] = "/idontexist"
         config = dict(

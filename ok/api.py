@@ -35,10 +35,12 @@ def load_config_from_envvar(varname, silent=True):
     variables within the file would be otherwise lost.
     """
     config_path = os.getenv(varname)
-    if config_path is None:
-        return
-    if not os.path.exists(config_path):
-        return
+    if config_path is None or not os.path.exists(config_path):
+        if silent:
+            return
+        else:
+            raise RuntimeError("No configuration in the variable %s" %
+                    varname)
     dirname = os.path.dirname(config_path)
     pyfile = os.path.basename(config_path)
     modulename = os.path.splitext(pyfile)[0]
@@ -49,8 +51,6 @@ def load_config_from_envvar(varname, silent=True):
         for attr in dir(config):
             if attr.isupper():
                 app.config[attr] = getattr(config, attr)
-    except ImportError:
-        pass
     finally:
         sys.path[:] = syspath
 
