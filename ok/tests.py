@@ -146,6 +146,22 @@ class OkAppTestCase(unittest.TestCase):
             self.assertEqual(ok.app.config["AUTO_CREATE"], False)
         self.assertEqual(ok.app.config["AUTO_CREATE"], True)
 
+    def test_load_unexisting_config(self):
+        os.environ["OK_CONFIG"] = "/idontexist"
+        config = dict(
+                TESTING=ok.app.config["TESTING"],
+                USERS_DB=ok.app.config["USERS_DB"],
+                GROUPS_DB=ok.app.config["GROUPS_DB"],
+                AUTO_CREATE=ok.app.config["AUTO_CREATE"],
+                DEFAULT_GROUPS=ok.app.config["DEFAULT_GROUPS"]
+                )
+        ok.api.load_config_from_envvar("OK_CONFIG")
+        self.assertEqual(dict( TESTING=ok.app.config["TESTING"],
+            USERS_DB=ok.app.config["USERS_DB"],
+            GROUPS_DB=ok.app.config["GROUPS_DB"],
+            AUTO_CREATE=ok.app.config["AUTO_CREATE"],
+            DEFAULT_GROUPS=ok.app.config["DEFAULT_GROUPS"]), config)
+
     def test_import_restriction(self):
         response = self.app.get("/restrictions/")
         body = json.loads(response.data)
