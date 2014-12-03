@@ -459,9 +459,17 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/restrictions/idontexist")
         self.assertEqual(response.status_code, 404)
 
-    def test_help_url(self):
-        response = self.app.get("/help")
+    def test_help_urls(self):
+        response = self.app.get("/help/")
         self.assertEqual(response.status_code, 200)
+        body = json.loads(response.data)
+        for link in body["links"].values():
+            response = self.app.get(link)
+            self.assertEqual(response.status_code, 200)
+
+    def test_help_url_unkown(self):
+        response = self.app.get("/help/idontexist")
+        self.assertEqual(response.status_code, 404)
 
     def test_ok_url_simple(self):
         response = self.app.get("/ok/?url=" + urlencode("/") + "&groups=admin")

@@ -490,7 +490,11 @@ def restrictions(restrictionname=None):
 
 @app.route("/")
 @app.route("/config/")
-def app_info():
+def config():
+    """
+    Description:
+    This resource gives you info about how the app is configured
+    """
     res = dict()
     res["USERS_DB"] = app.config["USERS_DB"]
     res["GROUPS_DB"] = app.config["GROUPS_DB"]
@@ -501,7 +505,10 @@ def app_info():
 @app.route("/help/")
 @app.route("/help/<endpoint>")
 def help(endpoint=None):
-    """Help for the developers"""
+    """
+    Description:
+    This resource prints help for the developers
+    """
     if endpoint is None:
         all_endpoints = [rule.endpoint for rule in
                          app.url_map.iter_rules() if rule.endpoint != "static"]
