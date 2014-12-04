@@ -110,10 +110,10 @@ def ports(groupname, http_scheme, http_netloc, http_path,
     allowed_ports = restriction_params
 
     if http_port is None:
-        http_port = 80
-
-    if http_port is None and http_scheme == "https":
-        http_port = 443
+        if http_scheme == "https":
+            http_port = 443
+        else:
+            http_port = 80
 
     return http_port in allowed_ports
 

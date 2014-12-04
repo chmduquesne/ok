@@ -146,6 +146,34 @@ class OkAppTestCase(unittest.TestCase):
             self.assertEqual(ok.app.config["AUTO_CREATE"], False)
         self.assertEqual(ok.app.config["AUTO_CREATE"], True)
 
+    def test_import_non_existing_config(self):
+        ok.api.load_config_from_envvar("IDONTEXIST")
+        with self.assertRaises(RuntimeError):
+            ok.api.load_config_from_envvar("IDONTEXIST", silent=False)
+
+    def test_load_unexisting_config(self):
+        os.environ["OK_CONFIG"] = "/idontexist"
+        config = dict(
+                TESTING=ok.app.config["TESTING"],
+                USERS_DB=ok.app.config["USERS_DB"],
+                GROUPS_DB=ok.app.config["GROUPS_DB"],
+                AUTO_CREATE=ok.app.config["AUTO_CREATE"],
+                DEFAULT_GROUPS=ok.app.config["DEFAULT_GROUPS"]
+                )
+        ok.api.load_config_from_envvar("OK_CONFIG")
+        self.assertEqual(dict( TESTING=ok.app.config["TESTING"],
+            USERS_DB=ok.app.config["USERS_DB"],
+            GROUPS_DB=ok.app.config["GROUPS_DB"],
+            AUTO_CREATE=ok.app.config["AUTO_CREATE"],
+            DEFAULT_GROUPS=ok.app.config["DEFAULT_GROUPS"]), config)
+
+    def test_forget_restriction(self):
+        with OkConfig(CUSTOM_RESTRICTION):
+            rule = ok.restrictions.restrictions_manager.get("myrestriction")
+            ok.restrictions.restrictions_manager.forget("myrestriction")
+            with self.assertRaises(KeyError):
+                rule = ok.restrictions.restrictions_manager.get("myrestriction")
+
     def test_import_restriction(self):
         response = self.app.get("/restrictions/")
         body = json.loads(response.data)
@@ -218,18 +246,18 @@ class OkAppTestCase(unittest.TestCase):
             for g in ok.app.config["DEFAULT_GROUPS"]:
                 self.assertIn(g, body["groups"])
 
-    def test_users_url_post_user_group_admin(self):
+    def test_users_url_post_user_group_unrestricted_users(self):
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
-        response = self.app.post("/users/john", data={"groups": "admin"})
+        response = self.app.post("/users/john", data={"groups": "unrestricted_users"})
         self.assertEqual(response.status_code, 201)
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         for g in ok.app.config["DEFAULT_GROUPS"]:
             self.assertIn(g, body["groups"])
-        self.assertIn("admin", body["groups"])
+        self.assertIn("unrestricted_users", body["groups"])
 
     def test_users_url_post_user_unexisting_group(self):
         response = self.app.get("/groups/unexisting")
@@ -423,8 +451,28 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/restrictions/")
         self.assertEqual(response.status_code, 200)
 
+    def test_restrictions_url_get_restriction(self):
+        response = self.app.get("/restrictions/unrestricted")
+        self.assertEqual(response.status_code, 200)
+
+    def test_restrictions_url_get_unexisting_restriction(self):
+        response = self.app.get("/restrictions/idontexist")
+        self.assertEqual(response.status_code, 404)
+
+    def test_help_urls(self):
+        response = self.app.get("/help/")
+        self.assertEqual(response.status_code, 200)
+        body = json.loads(response.data)
+        for link in body["links"].values():
+            response = self.app.get(link)
+            self.assertEqual(response.status_code, 200)
+
+    def test_help_url_unkown(self):
+        response = self.app.get("/help/idontexist")
+        self.assertEqual(response.status_code, 404)
+
     def test_ok_url_simple(self):
-        response = self.app.get("/ok/?url=" + urlencode("/") + "&groups=admin")
+        response = self.app.get("/ok/?url=" + urlencode("/") + "&groups=unrestricted_users")
         self.assertEqual(response.status_code, 200)
 
     def test_ok_url_advanced_restrictions_user(self):

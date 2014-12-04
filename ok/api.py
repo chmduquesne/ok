@@ -35,10 +35,12 @@ def load_config_from_envvar(varname, silent=True):
     variables within the file would be otherwise lost.
     """
     config_path = os.getenv(varname)
-    if config_path is None:
-        return
-    if not os.path.exists(config_path):
-        return
+    if config_path is None or not os.path.exists(config_path):
+        if silent:
+            return
+        else:
+            raise RuntimeError("No configuration in the variable %s" %
+                    varname)
     dirname = os.path.dirname(config_path)
     pyfile = os.path.basename(config_path)
     modulename = os.path.splitext(pyfile)[0]
@@ -49,8 +51,6 @@ def load_config_from_envvar(varname, silent=True):
         for attr in dir(config):
             if attr.isupper():
                 app.config[attr] = getattr(config, attr)
-    except ImportError:
-        pass
     finally:
         sys.path[:] = syspath
 
@@ -64,7 +64,7 @@ def get_groups_db():
     """
     if not hasattr(flask.g, "groups_db"):
         groups_db = serializeddicts.JsonDict(app.config["GROUPS_DB"])
-        groups_db["admin"] = {"/.*$": [["unrestricted", None]]}
+        groups_db["unrestricted_users"] = {"/.*$": [["unrestricted", None]]}
         for groupname in app.config["DEFAULT_GROUPS"]:
             if groups_db.get(groupname) is None:
                 groups_db[groupname] = {}
@@ -490,7 +490,11 @@ def restrictions(restrictionname=None):
 
 @app.route("/")
 @app.route("/config/")
-def app_info():
+def config():
+    """
+    Description:
+    This resource gives you info about how the app is configured
+    """
     res = dict()
     res["USERS_DB"] = app.config["USERS_DB"]
     res["GROUPS_DB"] = app.config["GROUPS_DB"]
@@ -501,7 +505,10 @@ def app_info():
 @app.route("/help/")
 @app.route("/help/<endpoint>")
 def help(endpoint=None):
-    """Help for the developers"""
+    """
+    Description:
+    This resource prints help for the developers
+    """
     if endpoint is None:
         all_endpoints = [rule.endpoint for rule in
                          app.url_map.iter_rules() if rule.endpoint != "static"]
