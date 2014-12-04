@@ -462,6 +462,44 @@ class OkAppTestCase(unittest.TestCase):
                     "&user=john")
             self.assertEqual(response.status_code, 200)
 
+    def test_ok_url_any_group_gets_you_access(self):
+        restrictions1 = {
+                "/path1": [
+                    ["http_methods", ["GET"]],
+                    ]
+                }
+        restrictions2 = {
+                "/path2": [
+                    ["http_methods", ["GET"]],
+                    ]
+                }
+        response = self.app.post("/groups/group1",
+                data={"restrictions": json.dumps(restrictions1)}
+                )
+        self.assertEqual(response.status_code, 201)
+        response = self.app.post("/groups/group2",
+                data={"restrictions": json.dumps(restrictions2)}
+                )
+        self.assertEqual(response.status_code, 201)
+        response = self.app.get("/ok/?url=" + urlencode("/path1") +
+                "&groups=group1")
+        self.assertEqual(response.status_code, 200)
+        response = self.app.get("/ok/?url=" + urlencode("/path2") +
+                "&groups=group1")
+        self.assertEqual(response.status_code, 403)
+        response = self.app.get("/ok/?url=" + urlencode("/path1") +
+                "&groups=group2")
+        self.assertEqual(response.status_code, 403)
+        response = self.app.get("/ok/?url=" + urlencode("/path2") +
+                "&groups=group2")
+        self.assertEqual(response.status_code, 200)
+        response = self.app.get("/ok/?url=" + urlencode("/path2") +
+                "&groups=" + urlencode("group1,group2"))
+        self.assertEqual(response.status_code, 200)
+        response = self.app.get("/ok/?url=" + urlencode("/path2") +
+                "&groups=" + urlencode("group2,group1"))
+        self.assertEqual(response.status_code, 200)
+
     def test_ok_url_advanced_restrictions_group(self):
         with OkConfig(ADVANCED_RESTRICTIONS):
             myrestrictions = {

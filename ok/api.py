@@ -238,10 +238,10 @@ def ok():
                 400, "%s: unparsable http_query" % http_query
                 )
 
+    match_found = False
     # For each groups, we go through all the path patterns.
     for group in group_list:
         restrictions = groups_db[group]
-        match_found = False
         # All the matching patterns must return True if the path matches
         for path_pattern, restriction_list in restrictions.iteritems():
             if re.match(path_pattern, http_path):
@@ -269,8 +269,8 @@ def ok():
                             http_data=data,
                             restriction_params=restriction_params
                             ):
-                        return json_response(403, "Restriction %s on %s" %
-                                             (restrictionname, path_pattern))
+                        match_found = False
+                        break
         # We need to find at least one matching path
         if match_found:
             return json_response(200, describe(group_list))
