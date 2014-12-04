@@ -246,18 +246,18 @@ class OkAppTestCase(unittest.TestCase):
             for g in ok.app.config["DEFAULT_GROUPS"]:
                 self.assertIn(g, body["groups"])
 
-    def test_users_url_post_user_group_admin(self):
+    def test_users_url_post_user_group_unrestricted_users(self):
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
-        response = self.app.post("/users/john", data={"groups": "admin"})
+        response = self.app.post("/users/john", data={"groups": "unrestricted_users"})
         self.assertEqual(response.status_code, 201)
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         for g in ok.app.config["DEFAULT_GROUPS"]:
             self.assertIn(g, body["groups"])
-        self.assertIn("admin", body["groups"])
+        self.assertIn("unrestricted_users", body["groups"])
 
     def test_users_url_post_user_unexisting_group(self):
         response = self.app.get("/groups/unexisting")
@@ -472,7 +472,7 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_ok_url_simple(self):
-        response = self.app.get("/ok/?url=" + urlencode("/") + "&groups=admin")
+        response = self.app.get("/ok/?url=" + urlencode("/") + "&groups=unrestricted_users")
         self.assertEqual(response.status_code, 200)
 
     def test_ok_url_advanced_restrictions_user(self):

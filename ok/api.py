@@ -64,7 +64,7 @@ def get_groups_db():
     """
     if not hasattr(flask.g, "groups_db"):
         groups_db = serializeddicts.JsonDict(app.config["GROUPS_DB"])
-        groups_db["admin"] = {"/.*$": [["unrestricted", None]]}
+        groups_db["unrestricted_users"] = {"/.*$": [["unrestricted", None]]}
         for groupname in app.config["DEFAULT_GROUPS"]:
             if groups_db.get(groupname) is None:
                 groups_db[groupname] = {}
