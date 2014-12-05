@@ -1,4 +1,6 @@
 #!/usr/bin/python2
+# -*- coding: utf-8 -*-
+
 import os
 
 # try to load a virtualenv from the PYTHON_VIRTUALENV environment

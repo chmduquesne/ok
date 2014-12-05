@@ -1,4 +1,5 @@
-#!env python2
+# -*- coding: utf-8 -*-
+
 from __future__ import with_statement
 import urlparse
 import urllib2
@@ -64,10 +65,13 @@ def get_groups_db():
     """
     if not hasattr(flask.g, "groups_db"):
         groups_db = serializeddicts.JsonDict(app.config["GROUPS_DB"])
-        groups_db["unrestricted_users"] = {"/.*$": [["unrestricted", None]]}
+        groups_db["unrestricted_users"] = {
+                "hint": True,
+                "restrictions": [[".*", "unrestricted", None]]
+                }
         for groupname in app.config["DEFAULT_GROUPS"]:
-            if groups_db.get(groupname) is None:
-                groups_db[groupname] = {}
+            if groupname not in groups_db:
+                groups_db[groupname] = {"hint": True, "restrictions": []}
         flask.g.groups_db = groups_db
     return flask.g.groups_db
 
@@ -82,13 +86,6 @@ def get_users_db():
             app.config["USERS_DB"]
             )
     return flask.g.users_db
-
-
-def urldecode(s):
-    """
-    Decodes an url-encoded string
-    """
-    return urllib2.unquote(s).decode('utf-8')
 
 
 def json_response(status, body={}):
@@ -114,8 +111,13 @@ def json_response(status, body={}):
     return response
 
 
-def describe(groups):
-    return {}
+def describe(group_list):
+    """
+    Describes the groups with their hints (will raise an exception if the
+    groups database in not correct)
+    """
+    groups_db = get_groups_db()
+    return dict(((groupname, groups_db[groupname]["hint"]) for groupname in group_list))
 
 
 @app.route("/ok/")
@@ -182,7 +184,7 @@ def ok():
     if user_arg is None and groups_arg is None:
         return json_response(400, "Expected a user or some groups")
     if groups_arg is None:
-        username = urldecode(user_arg)
+        username = user_arg
         if not users_db.get(username):
             if app.config["AUTO_CREATE"]:
                 users_db[username] = {
@@ -193,7 +195,7 @@ def ok():
         group_list = users_db[username]["groups"]
     else:
         try:
-            group_list = urldecode(groups_arg).split(",")
+            group_list = groups_arg.split(",")
         except TypeError:
             return json_response(400, "%s: unparsable groups" % groups_arg)
     data = {}
@@ -208,7 +210,7 @@ def ok():
     http_method = None
     if http_method_arg is not None:
         try:
-            http_method = urldecode(http_method_arg)
+            http_method = http_method_arg
         except ValueError:
             return json_response(
                 400,
@@ -240,22 +242,16 @@ def ok():
 
     match_found = False
     # For each groups, we go through all the path patterns.
-    for group in group_list:
-        restrictions = groups_db[group]
-        # All the matching patterns must return True if the path matches
-        for path_pattern, restriction_list in restrictions.iteritems():
-            if re.match(path_pattern, http_path):
-                match_found = True
-                for restrictionname, restriction_params in restriction_list:
-                    try:
-                        rule = restrictions_manager.get(restrictionname)
-                    except KeyError:
-                        return json_response(
-                            500,
-                            "%s: unknown restriction" % restrictionname
-                            )
+    for groupname in group_list:
+        try:
+            restriction_list = groups_db[groupname]["restrictions"]
+            # All the matching patterns must return True if the path matches
+            for path_pattern, restrictionname, restriction_params in restriction_list:
+                if re.match(path_pattern, http_path):
+                    match_found = True
+                    rule = restrictions_manager.get(restrictionname)
                     if not rule.applies(
-                            groupname=group,
+                            groupname=groupname,
                             http_scheme=http_scheme,
                             http_netloc=http_netloc,
                             http_path=http_path,
@@ -271,11 +267,17 @@ def ok():
                             ):
                         match_found = False
                         break
+        except (KeyError, TypeError, ValueError):
+            return json_response(
+                500,
+                "%s: group incorrectly defined" % groupname
+                )
+
         # We need to find at least one matching path
         if match_found:
             return json_response(200, describe(group_list))
 
-    return json_response(403, "Not allowed (no matching path on any group)")
+    return json_response(403, "Not allowed")
 
 
 @app.route("/users/")
@@ -379,22 +381,20 @@ def groups(groupname=None):
     Data Model:
     groups = {
         groupname1: {
-           "path_pattern1": [["restrictionname1", parameters1],
-                             ["restrictionname2", parameters2],
-                             ...],
-           "path_pattern2": [["restrictionname1", parameters1],
-                             ["restrictionname2", parameters2],
-                             ...],
-            ...
+            "hint" : <json to forward to the webservice in case of success>,
+            "restrictions": [
+                ["path_pattern1", "restrictionname1", parameters1],
+                ["path_pattern2", "restrictionname2", parameters2],
+                ...
+            ]
         },
         groupname2: {
-           "path_pattern1": [["restrictionname1", parameters1],
-                             ["restrictionname2", parameters2],
-                             ...],
-           "path_pattern2": [["restrictionname1", parameters1],
-                             ["restrictionname2", parameters2],
-                             ...],
-            ...
+            "hint" : <json to forward to the webservice in case of success>,
+            "restrictions": [
+                ["path_pattern1", "restrictionname1", parameters1],
+                ["path_pattern2", "restrictionname2", parameters2],
+                ...
+            ]
         },
         ...
     }
@@ -424,24 +424,28 @@ def groups(groupname=None):
             try:
                 restrictions_arg = flask.request.form.get("restrictions", None)
                 if restrictions_arg is None:
-                    path_restrictions = {}
+                    path_restrictions = {
+                            "hint": True,
+                            "restrictions": []
+                            }
                 else:
                     path_restrictions = dict(
-                        json.loads(urldecode(restrictions_arg))
+                        json.loads(restrictions_arg)
                         )
-            except TypeError:
-                return json_response(
-                    400, "Could not parse provided restrictions %s" %
-                    restrictions_arg
-                    )
-            for path_pattern, restriction_list in \
-                    path_restrictions.iteritems():
-                for restrictionname, restriction_params in restriction_list:
+                if "hint" not in path_restrictions:
+                    path_restrictions["hint"] = True
+                for path_pattern, restrictionname, restriction_params in \
+                        path_restrictions["restrictions"]:
                     if restrictionname not in restrictions_manager.all():
                         return json_response(
                             404, "%s: unknown restriction" %
                             restrictionname
                             )
+            except (KeyError, TypeError, ValueError):
+                return json_response(
+                    400, "%s: Could not parse provided restrictions" %
+                    restrictions_arg
+                    )
 
             groups_db[groupname] = path_restrictions
 
