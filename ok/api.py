@@ -173,18 +173,12 @@ def ok():
     users_db = get_users_db()
     groups_db = get_groups_db()
 
-    url_arg = flask.request.args.get("url", None)
-    groups_arg = flask.request.args.get("groups", None)
-    user_arg = flask.request.args.get("user", None)
-    http_method_arg = flask.request.args.get("http_method", None)
-    data_arg = flask.request.args.get("data", None)
-
-    if url_arg is None:
+    if "url" not in flask.request.args:
         return json_response(400, "Expected a url argument")
-    if user_arg is None and groups_arg is None:
+    if "user" not in flask.request.args and "groups" not in flask.request.args:
         return json_response(400, "Expected a user or some groups")
-    if groups_arg is None:
-        username = user_arg
+    if "groups" not in flask.request.args:
+        username = flask.request.args["user"]
         if not users_db.get(username):
             if app.config["AUTO_CREATE"]:
                 users_db[username] = {
@@ -195,32 +189,24 @@ def ok():
         group_list = users_db[username]["groups"]
     else:
         try:
-            group_list = groups_arg.split(",")
+            group_list = flask.request.args["groups"].split(",")
         except TypeError:
             return json_response(400, "%s: unparsable groups" % groups_arg)
     data = {}
-    if data_arg is not None:
+    if "data" in flask.request.args:
         try:
-            data = urllib.parse_qs(data_arg)
+            data = urllib.parse_qs(flask.request.args["data"])
         except ValueError:
             return json_response(
                 400,
                 "%s: unparsable data" % data_arg
                 )
-    http_method = None
-    if http_method_arg is not None:
-        try:
-            http_method = http_method_arg
-        except ValueError:
-            return json_response(
-                400,
-                "%s: unparsable http_method" % http_method_arg
-                )
+    http_method = flask.request.args.get("http_method")
     for group in group_list:
         if groups_db.get(group) is None:
             return json_response(403, "%s: unknown group" % group)
 
-    url_parts = urlparse.urlsplit(url_arg)
+    url_parts = urlparse.urlsplit(flask.request.args["url"])
 
     http_scheme = url_parts.scheme
     http_netloc = url_parts.netloc
@@ -311,32 +297,26 @@ def users(username=None):
     if username is None:
         return flask.jsonify(users_db)
     else:
-        user = users_db.get(username)
-
         if flask.request.method == "GET":
-            if user is None:
+            if username not in users_db:
                 return json_response(404, "%s: unknown user" % username)
             else:
-                return flask.jsonify(user)
+                return flask.jsonify(users_db[username])
 
         if flask.request.method in ("POST", "PUT"):
 
             if flask.request.method == "POST":
-                if users_db.get(username) is not None:
+                if username in users_db:
                     return json_response(400, "%s: user already exists")
             if flask.request.method == "PUT":
-                if users_db.get(username) is None:
+                if username not in users_db:
                     return json_response(404, "%s: unknown user")
 
             try:
-                groups_arg = flask.request.form.get("groups", None)
-                if groups_arg is None:
-                    group_list = []
-                else:
-                    group_list = groups_arg.split(",")
-            except TypeError:
-                return json_response(400, "%s: unparsable groups" %
-                                     groups_arg)
+                group_list = flask.request.form["groups"].split(",")
+            except KeyError:
+                group_list = []
+
             for groupname in app.config["DEFAULT_GROUPS"]:
                 if groupname not in group_list:
                     group_list.append(groupname)
@@ -358,7 +338,7 @@ def users(username=None):
                 return json_response(200, "%s: user updated" % username)
 
         if flask.request.method == "DELETE":
-            if user is None:
+            if username not in users_db:
                 return json_response(404, "%s: unknown user" % username)
             del users_db[username]
             return json_response(200, "/users/%s deleted" % username)
@@ -404,21 +384,19 @@ def groups(groupname=None):
     if groupname is None:
         return flask.jsonify(groups_db)
     else:
-        group = groups_db.get(groupname)
-
         if flask.request.method == "GET":
-            if group is None:
+            if groupname not in groups_db:
                 return json_response(404, "%s: unknown group" % groupname)
             else:
-                return flask.jsonify(group)
+                return flask.jsonify(groups_db[groupname])
 
         if flask.request.method in ("POST", "PUT"):
 
             if flask.request.method == "POST":
-                if groups_db.get(groupname) is not None:
+                if groupname in groups_db:
                     return json_response(400, "%s: group already exists")
             if flask.request.method == "PUT":
-                if groups_db.get(groupname) is None:
+                if groupname not in groups_db:
                     return json_response(404, "%s: unknown group")
 
             try:
@@ -458,7 +436,7 @@ def groups(groupname=None):
                     200, "%s: group updated" % groupname
                     )
         if flask.request.method == "DELETE":
-            if group is None:
+            if groupname not in groups_db:
                 return json_response(404, "%s: unknown group" % groupname)
             del groups_db[groupname]
             users_db = get_users_db()
