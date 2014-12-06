@@ -10,6 +10,7 @@ import sys
 import json
 import re
 import serializeddicts
+import werkzeug.datastructures
 
 from restrictions import restrictions_manager
 from ok import app
@@ -120,6 +121,15 @@ def describe(group_list):
     return dict(((groupname, groups_db[groupname]["hint"]) for groupname in group_list))
 
 
+def parse_qs(qs, keep_blank_values=False, strict_parsing=False):
+    """
+    parse query string into a werkzeug MultiDict
+    """
+    return werkzeug.datastructures.MultiDict(
+            urlparse.parse_qs(qs, keep_blank_values, strict_parsing)
+            )
+
+
 @app.route("/ok/")
 def ok():
     """
@@ -193,9 +203,9 @@ def ok():
         except TypeError:
             return json_response(400, "%s: unparsable groups" % groups_arg)
 
-    data = {}
+    data = werkzeug.datastructures.MultiDict()
     if "data" in flask.request.args:
-        data = urllib.parse_qs(flask.request.args["data"])
+        data = parse_qs(flask.request.args["data"])
 
     http_method = flask.request.args.get("http_method")
     for group in group_list:
@@ -207,20 +217,15 @@ def ok():
     http_scheme = url_parts.scheme
     http_netloc = url_parts.netloc
     http_path = url_parts.path
-    http_query = url_parts.query
     http_fragment = url_parts.fragment  # should always be None
     http_username = url_parts.username
     http_password = url_parts.password
     http_hostname = url_parts.hostname
     http_port = url_parts.port
 
-    if http_query is not None:
-        try:
-            http_query = urlparse.parse_qs(url_parts.query)
-        except ValueError:
-            return json_response(
-                400, "%s: unparsable http_query" % http_query
-                )
+    http_query = werkzeug.datastructures.MultiDict()
+    if url_parts.query is not None:
+        http_query = parse_qs(url_parts.query)
 
     match_found = False
     # For each groups, we go through all the path patterns.

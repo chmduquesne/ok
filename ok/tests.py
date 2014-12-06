@@ -56,16 +56,11 @@ def restricted_ingredient(groupname, http_scheme, http_netloc, http_path,
     Restrict the ingredient argument to a given category
     \"\"\"
 
-    # http_query is a dictionary <name> => <list>, where <name> is a
-    # parameter name, and <list> are all the occurrences of this
-    # parameter in the url, such that ?name=foo&name=bar returns the
-    # dictionary {"name", ["foo", "bar"]}. The following snippet gets the
-    # last occurrence
-    ingredient = http_query.get("ingredient", [None])[-1]
-
     category = restriction_params
-    if ingredient is not None:
-        return ingredient in categories[category]
+
+    if "ingredient" in http_query:
+        return http_query["ingredient"] in categories[category]
+
     return True
 """
 
