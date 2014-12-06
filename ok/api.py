@@ -192,15 +192,11 @@ def ok():
             group_list = flask.request.args["groups"].split(",")
         except TypeError:
             return json_response(400, "%s: unparsable groups" % groups_arg)
+
     data = {}
     if "data" in flask.request.args:
-        try:
-            data = urllib.parse_qs(flask.request.args["data"])
-        except ValueError:
-            return json_response(
-                400,
-                "%s: unparsable data" % data_arg
-                )
+        data = urllib.parse_qs(flask.request.args["data"])
+
     http_method = flask.request.args.get("http_method")
     for group in group_list:
         if groups_db.get(group) is None:
