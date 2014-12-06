@@ -23,7 +23,8 @@ app.config.update(dict(
     USERS_DB=os.path.join(XDG_DATA_DIR, "users.kch"),
     GROUPS_DB=os.path.join(XDG_CONFIG_DIR, "groups.json"),
     AUTO_CREATE=True,
-    DEFAULT_GROUPS=["users"]
+    DEFAULT_GROUPS=["users"],
+    ANONYMOUS_GROUPS=["anonymous"]
     ))
 
 
@@ -66,11 +67,14 @@ def get_groups_db():
     """
     if not hasattr(flask.g, "groups_db"):
         groups_db = serializeddicts.JsonDict(app.config["GROUPS_DB"])
-        groups_db["unrestricted_users"] = {
+        groups_db["unrestricted"] = {
             "hint": True,
             "restrictions": [[".*", "unrestricted", None]]
             }
         for groupname in app.config["DEFAULT_GROUPS"]:
+            if groupname not in groups_db:
+                groups_db[groupname] = {"hint": True, "restrictions": []}
+        for groupname in app.config["ANONYMOUS_GROUPS"]:
             if groupname not in groups_db:
                 groups_db[groupname] = {"hint": True, "restrictions": []}
         flask.g.groups_db = groups_db
@@ -187,23 +191,24 @@ def ok():
 
     if "url" not in flask.request.args:
         return json_response(400, "Expected a url argument")
-    if "user" not in flask.request.args and "groups" not in flask.request.args:
-        return json_response(400, "Expected a user or some groups")
-    if "groups" not in flask.request.args:
-        username = flask.request.args["user"]
-        if not users_db.get(username):
-            if app.config["AUTO_CREATE"]:
-                users_db[username] = {
-                    "groups": app.config["DEFAULT_GROUPS"]
-                    }
-            else:
-                return json_response(403, "%s: unkown user" % username)
-        group_list = users_db[username]["groups"]
-    else:
+
+    group_list = app.config["ANONYMOUS_GROUPS"]
+    if "groups" in flask.request.args:
         try:
             group_list = flask.request.args["groups"].split(",")
         except TypeError:
             return json_response(400, "%s: unparsable groups" % groups_arg)
+    else:
+        if "user" in flask.request.args:
+            username = flask.request.args["user"]
+            if not users_db.get(username):
+                if app.config["AUTO_CREATE"]:
+                    users_db[username] = {
+                        "groups": app.config["DEFAULT_GROUPS"]
+                        }
+                else:
+                    return json_response(403, "%s: unkown user" % username)
+            group_list = users_db[username]["groups"]
 
     data = werkzeug.datastructures.MultiDict()
     if "data" in flask.request.args:

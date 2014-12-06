@@ -246,14 +246,14 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 404)
-        response = self.app.post("/users/john", data={"groups": "unrestricted_users"})
+        response = self.app.post("/users/john", data={"groups": "unrestricted"})
         self.assertEqual(response.status_code, 201)
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         for g in ok.app.config["DEFAULT_GROUPS"]:
             self.assertIn(g, body["groups"])
-        self.assertIn("unrestricted_users", body["groups"])
+        self.assertIn("unrestricted", body["groups"])
 
     def test_users_url_post_user_unexisting_group(self):
         response = self.app.get("/groups/unexisting")
@@ -469,7 +469,8 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_ok_url_simple(self):
-        response = self.app.get("/ok/?url=" + urlencode("/") + "&groups=unrestricted_users")
+        response = self.app.get("/ok/?url=" + urlencode("/")
+                + "&groups=unrestricted")
         self.assertEqual(response.status_code, 200)
 
     def test_ok_url_advanced_restrictions_user(self):
@@ -606,9 +607,15 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/ok/?user=john&group=mygroup")
         self.assertEqual(response.status_code, 400)
 
-    def test_ok_url_no_user_no_group(self):
+    def test_ok_url_anonymous(self):
         response = self.app.get("/ok/?url=" + urlencode("/"))
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 403)
+        restrictions = [[".*", "unrestricted", None]]
+        response = self.app.put("/groups/anonymous",
+                data={"restrictions": json.dumps(restrictions)})
+        self.assertEqual(response.status_code, 200)
+        response = self.app.get("/ok/?url=" + urlencode("/"))
+        self.assertEqual(response.status_code, 200)
 
     def test_ok_url_auto_create_user(self):
         response = self.app.get("/users/john")
