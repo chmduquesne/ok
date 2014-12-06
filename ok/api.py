@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from __future__ import with_statement
 import urlparse
@@ -42,7 +42,7 @@ def load_config_from_envvar(varname, silent=True):
             return
         else:
             raise RuntimeError("No configuration in the variable %s" %
-                    varname)
+                               varname)
     dirname = os.path.dirname(config_path)
     pyfile = os.path.basename(config_path)
     modulename = os.path.splitext(pyfile)[0]
@@ -67,9 +67,9 @@ def get_groups_db():
     if not hasattr(flask.g, "groups_db"):
         groups_db = serializeddicts.JsonDict(app.config["GROUPS_DB"])
         groups_db["unrestricted_users"] = {
-                "hint": True,
-                "restrictions": [[".*", "unrestricted", None]]
-                }
+            "hint": True,
+            "restrictions": [[".*", "unrestricted", None]]
+            }
         for groupname in app.config["DEFAULT_GROUPS"]:
             if groupname not in groups_db:
                 groups_db[groupname] = {"hint": True, "restrictions": []}
@@ -107,6 +107,7 @@ def json_response(status, body={}):
     if not isinstance(body, dict):
         body = {"message": body}
     body["status"] = status_message[status]
+    body["status_code"] = status
     response = flask.jsonify(body)
     response.status = str(status)
     return response
@@ -118,7 +119,8 @@ def describe(group_list):
     groups database in not correct)
     """
     groups_db = get_groups_db()
-    return dict(((groupname, groups_db[groupname]["hint"]) for groupname in group_list))
+    return dict(((groupname, groups_db[groupname]["hint"])
+                for groupname in group_list))
 
 
 def parse_qs(qs, keep_blank_values=False, strict_parsing=False):
@@ -126,8 +128,8 @@ def parse_qs(qs, keep_blank_values=False, strict_parsing=False):
     parse query string into a werkzeug MultiDict
     """
     return werkzeug.datastructures.MultiDict(
-            urlparse.parse_qs(qs, keep_blank_values, strict_parsing)
-            )
+        urlparse.parse_qs(qs, keep_blank_values, strict_parsing)
+        )
 
 
 @app.route("/ok/")
@@ -233,7 +235,8 @@ def ok():
         try:
             restriction_list = groups_db[groupname]["restrictions"]
             # All the matching patterns must return True if the path matches
-            for path_pattern, restrictionname, restriction_params in restriction_list:
+            for path_pattern, restrictionname, restriction_params \
+                    in restriction_list:
                 if re.match(path_pattern, http_path):
                     match_found = True
                     rule = restrictions_manager.get(restrictionname)
@@ -430,9 +433,9 @@ def groups(groupname=None):
                     )
 
             groups_db[groupname] = {
-                    "hint": hint,
-                    "restrictions": restriction_list
-                    }
+                "hint": hint,
+                "restrictions": restriction_list
+                }
 
             if flask.request.method == "POST":
                 return json_response(

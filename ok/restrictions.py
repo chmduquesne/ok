@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import re
 import json
+
 
 class Rule():
     def __init__(self, func):
@@ -79,16 +80,16 @@ def http_methods(groupname, http_scheme, http_netloc, http_path,
     allowed_methods = restriction_params
 
     if http_method is None:
-        http_method="GET"
+        http_method = "GET"
 
     return http_method in allowed_methods
 
 
 @restrictions_manager.register(takes_extra_param=True)
 def host_match(groupname, http_scheme, http_netloc, http_path,
-                 http_query, http_fragment, http_username, http_password,
-                 http_hostname, http_port, http_method, http_data,
-                 restriction_params):
+               http_query, http_fragment, http_username, http_password,
+               http_hostname, http_port, http_method, http_data,
+               restriction_params):
     """
     Restricts the host name.
 
@@ -101,9 +102,9 @@ def host_match(groupname, http_scheme, http_netloc, http_path,
 
 @restrictions_manager.register(takes_extra_param=True)
 def ports(groupname, http_scheme, http_netloc, http_path,
-                 http_query, http_fragment, http_username, http_password,
-                 http_hostname, http_port, http_method, http_data,
-                 restriction_params):
+          http_query, http_fragment, http_username, http_password,
+          http_hostname, http_port, http_method, http_data,
+          restriction_params):
     """
     Restricts the port.
 
@@ -122,9 +123,9 @@ def ports(groupname, http_scheme, http_netloc, http_path,
 
 @restrictions_manager.register(takes_extra_param=True)
 def schemes(groupname, http_scheme, http_netloc, http_path,
-                 http_query, http_fragment, http_username, http_password,
-                 http_hostname, http_port, http_method, http_data,
-                 restriction_params):
+            http_query, http_fragment, http_username, http_password,
+            http_hostname, http_port, http_method, http_data,
+            restriction_params):
     """
     Restricts the scheme.
 
