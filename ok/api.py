@@ -396,37 +396,43 @@ def groups(groupname=None):
             if flask.request.method == "POST":
                 if groupname in groups_db:
                     return json_response(400, "%s: group already exists")
+                restriction_list = []
+                hint = True
             if flask.request.method == "PUT":
                 if groupname not in groups_db:
                     return json_response(404, "%s: unknown group")
-
+                restriction_list = groups_db[groupname]["restrictions"]
+                hint = groups_db[groupname]["hint"]
             try:
-                restrictions_arg = flask.request.form.get("restrictions", None)
-                if restrictions_arg is None:
-                    path_restrictions = {
-                            "hint": True,
-                            "restrictions": []
-                            }
-                else:
-                    path_restrictions = dict(
-                        json.loads(restrictions_arg)
+                if "restrictions" in flask.request.form:
+                    restriction_list = json.loads(
+                        flask.request.form["restrictions"]
                         )
-                if "hint" not in path_restrictions:
-                    path_restrictions["hint"] = True
-                for path_pattern, restrictionname, restriction_params in \
-                        path_restrictions["restrictions"]:
+                if "hint" in flask.request.form:
+                    hint = json.loads(
+                        flask.request.form["hint"]
+                        )
+            except ValueError:
+                return json_response(
+                    400, "Could json-decode the form input"
+                    )
+            try:
+                for _, restrictionname, _ in restriction_list:
                     if restrictionname not in restrictions_manager.all():
                         return json_response(
                             404, "%s: unknown restriction" %
                             restrictionname
                             )
-            except (KeyError, TypeError, ValueError):
+            except ValueError:
                 return json_response(
-                    400, "%s: Could not parse provided restrictions" %
-                    restrictions_arg
+                    400, "%s: values do not unpack as expected" %
+                    json.dumps(restriction_list)
                     )
 
-            groups_db[groupname] = path_restrictions
+            groups_db[groupname] = {
+                    "hint": hint,
+                    "restrictions": restriction_list
+                    }
 
             if flask.request.method == "POST":
                 return json_response(

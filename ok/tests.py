@@ -377,10 +377,8 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEquals(response.status_code, 400)
 
     def test_groups_url_post_group(self):
-        myrestrictions = {
-                "restrictions": [["/foo", "unrestricted", None],
-                                 ["/bar", "unrestricted", None]]
-                }
+        myrestrictions = [["/foo", "unrestricted", None],
+                          ["/bar", "unrestricted", None]]
         response = self.app.post("/groups/mygroup",
                 data={"restrictions": json.dumps(myrestrictions)}
                 )
@@ -389,14 +387,11 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertEquals(
                 json.loads(response.data)["restrictions"],
-                myrestrictions["restrictions"]
+                myrestrictions
                 )
 
     def test_groups_url_post_group_unknown_restriction(self):
-        myrestrictions = {
-                "hint": None,
-                "restrictions": [["/foo", "unknownrestriction", None]]
-                }
+        myrestrictions = [["/foo", "unknownrestriction", None]]
         response = self.app.post("/groups/mygroup",
                 data={"restrictions": json.dumps(myrestrictions)}
                 )
@@ -413,19 +408,17 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertEquals(json.loads(response.data),
                 {"hint": True, "restrictions": []})
-        myrestrictions = {
-                "hint": True,
-                "restrictions": [["/foo", "unrestricted", None],
-                                 ["/bar", "unrestricted", None]]
+        myrestrictions = [["/foo", "unrestricted", None],
+                          ["/bar", "unrestricted", None]]
 
-                }
         response = self.app.put("/groups/mygroup",
                 data={"restrictions": json.dumps(myrestrictions)}
                 )
         self.assertEquals(response.status_code, 200)
         response = self.app.get("/groups/mygroup")
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(json.loads(response.data), myrestrictions)
+        body = json.loads(response.data)
+        self.assertEquals(body["restrictions"], myrestrictions)
 
     def test_groups_url_delete_unknown_group(self):
         response = self.app.delete("/groups/unknown")
@@ -481,12 +474,10 @@ class OkAppTestCase(unittest.TestCase):
 
     def test_ok_url_advanced_restrictions_user(self):
         with OkConfig(ADVANCED_RESTRICTIONS):
-            myrestrictions = {
-                    "restrictions": [
+            myrestrictions = [
                         ["/recipes", "http_methods", ["GET"]],
                         ["/recipes", "restricted_ingredient", "fruits"]
                         ]
-                    }
             response = self.app.post("/groups/fruitlovers",
                     data={"restrictions": json.dumps(myrestrictions)}
                     )
@@ -517,12 +508,10 @@ class OkAppTestCase(unittest.TestCase):
     def test_ok_url_advanced_restrictions_weird_username(self):
         with OkConfig(ADVANCED_RESTRICTIONS):
             myusername = urlencode("Émilien Jeunêt")
-            myrestrictions = {
-                    "restrictions": [
+            myrestrictions = [
                         ["/recipes", "http_methods", ["GET"]],
                         ["/recipes", "restricted_ingredient", "fruits"]
                         ]
-                    }
             response = self.app.post("/groups/fruitlovers",
                     data={"restrictions": json.dumps(myrestrictions)}
                     )
@@ -551,12 +540,8 @@ class OkAppTestCase(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
 
     def test_ok_url_any_group_gets_you_access(self):
-        restrictions1 = {
-                "restrictions": [["/path1", "http_methods", ["GET"]]]
-                }
-        restrictions2 = {
-                "restrictions": [["/path2", "http_methods", ["GET"]]]
-                }
+        restrictions1 = [["/path1", "http_methods", ["GET"]]]
+        restrictions2 = [["/path2", "http_methods", ["GET"]]]
         response = self.app.post("/groups/group1",
                 data={"restrictions": json.dumps(restrictions1)}
                 )
@@ -586,12 +571,10 @@ class OkAppTestCase(unittest.TestCase):
 
     def test_ok_url_advanced_restrictions_group(self):
         with OkConfig(ADVANCED_RESTRICTIONS):
-            myrestrictions = {
-                    "restrictions": [
+            myrestrictions = [
                         ["/recipes", "http_methods", ["GET"]],
                         ["/recipes", "restricted_ingredient", "fruits"]
                         ]
-                    }
             response = self.app.post("/groups/fruitlovers",
                     data={"restrictions": json.dumps(myrestrictions)}
                     )
@@ -630,9 +613,7 @@ class OkAppTestCase(unittest.TestCase):
     def test_ok_url_auto_create_user(self):
         response = self.app.get("/users/john")
         self.assertEqual(response.status_code, 404)
-        restrictions = {
-                "restrictions": [["/public.*$", "unrestricted", None]]
-                }
+        restrictions = [["/public.*$", "unrestricted", None]]
         for group in ok.app.config["DEFAULT_GROUPS"]:
             response = self.app.put("/groups/%s" % group,
                     data={"restrictions": json.dumps(restrictions)}
@@ -648,9 +629,7 @@ class OkAppTestCase(unittest.TestCase):
         with OkConfig(NO_AUTO_CREATE):
             response = self.app.get("/users/john")
             self.assertEqual(response.status_code, 404)
-            restrictions = {
-                    "restrictions": [["/public.*$", "unrestricted", None]]
-                    }
+            restrictions = [["/public.*$", "unrestricted", None]]
             for group in ok.app.config["DEFAULT_GROUPS"]:
                 response = self.app.put("/groups/%s" % group,
                         data={"restrictions": json.dumps(restrictions)}
@@ -668,9 +647,7 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_restriction_host_match(self):
-        restrictions = {
-                "restrictions": [["/.*$", "host_match", "success.com"]]
-                }
+        restrictions = [["/.*$", "host_match", "success.com"]]
         for group in ok.app.config["DEFAULT_GROUPS"]:
             response = self.app.put("/groups/%s" % group,
                     data={"restrictions": json.dumps(restrictions)}
@@ -688,9 +665,7 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_restriction_ports(self):
-        restrictions = {
-                "restrictions": [["/.*$","ports", [80, 443]]]
-                }
+        restrictions = [["/.*$","ports", [80, 443]]]
         for group in ok.app.config["DEFAULT_GROUPS"]:
             response = self.app.put("/groups/%s" % group,
                     data={"restrictions": json.dumps(restrictions)}
@@ -723,9 +698,7 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_restriction_http_methods(self):
-        restrictions = {
-                "restrictions": [[".*", "http_methods", ["GET", "PUT"]]]
-                }
+        restrictions = [[".*", "http_methods", ["GET", "PUT"]]]
         for group in ok.app.config["DEFAULT_GROUPS"]:
             response = self.app.put("/groups/%s" % group,
                     data={"restrictions": json.dumps(restrictions)}
@@ -750,9 +723,7 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_restriction_schemes(self):
-        restrictions = {
-                "restrictions": [[".*", "schemes", ["https"]]]
-                }
+        restrictions = [[".*", "schemes", ["https"]]]
         for group in ok.app.config["DEFAULT_GROUPS"]:
             response = self.app.put("/groups/%s" % group,
                     data={"restrictions": json.dumps(restrictions)}
