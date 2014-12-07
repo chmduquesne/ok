@@ -192,12 +192,15 @@ def ok():
     if "url" not in flask.request.args:
         return json_response(400, "Expected a url argument")
 
+    # By default, we assume anonymous groups
     group_list = app.config["ANONYMOUS_GROUPS"]
+    # Unless the groups are specified
     if "groups" in flask.request.args:
         try:
             group_list = flask.request.args["groups"].split(",")
         except TypeError:
             return json_response(400, "%s: unparsable groups" % groups_arg)
+    # If no group is specified, we do a user lookup
     else:
         if "user" in flask.request.args:
             username = flask.request.args["user"]
@@ -215,10 +218,11 @@ def ok():
         data = parse_qs(flask.request.args["data"])
 
     http_method = flask.request.args.get("http_method")
-    for group in group_list:
-        if groups_db.get(group) is None:
-            return json_response(403, "%s: unknown group" % group)
+    for groupname in group_list:
+        if groupname not in groups_db:
+            return json_response(403, "%s: unknown group" % groupname)
 
+    # At this point, we know we have a request and some groups.
     url_parts = urlparse.urlsplit(flask.request.args["url"])
 
     http_scheme = url_parts.scheme
@@ -234,12 +238,13 @@ def ok():
     if url_parts.query is not None:
         http_query = parse_qs(url_parts.query)
 
+    # We process it through the restrictions of each group
+
     match_found = False
-    # For each groups, we go through all the path patterns.
     for groupname in group_list:
         try:
             restriction_list = groups_db[groupname]["restrictions"]
-            # All the matching patterns must return True if the path matches
+            # All the matching patterns must return True
             for path_pattern, restrictionname, restriction_params \
                     in restriction_list:
                 if re.match(path_pattern, http_path):
@@ -268,7 +273,6 @@ def ok():
                 "%s: group incorrectly defined" % groupname
                 )
 
-        # We need to find at least one matching path
         if match_found:
             return json_response(200, describe(group_list))
 
