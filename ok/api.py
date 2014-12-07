@@ -24,7 +24,8 @@ app.config.update(dict(
     GROUPS_DB=os.path.join(XDG_CONFIG_DIR, "groups.json"),
     AUTO_CREATE=True,
     DEFAULT_GROUPS=["users"],
-    ANONYMOUS_GROUPS=["anonymous"]
+    ANONYMOUS_GROUPS=["anonymous"],
+    MAX_RESULTS=50
     ))
 
 
@@ -307,10 +308,30 @@ def users(username=None):
     # list all users
     users_db = get_users_db()
 
+    page = 1
+    if "page" in flask.request.args:
+        try:
+            page = int(flask.request.args["page"])
+        except ValueError:
+            page = len(users_db) // app.config["MAX_RESULTS"] + 1
+
     if username is None:
-        return flask.jsonify(users_db)
+        res = {}
+        for n, (k, v) in enumerate(users_db.iteritems()):
+            if page <= (n // app.config["MAX_RESULTS"] + 1) < page + 1:
+                res[k] = v
+        return flask.jsonify(res)
     else:
         if flask.request.method == "GET":
+            if "as_filter" in flask.request.args:
+                res = {}
+                for n, (k, v) in enumerate(users_db.iteritems()):
+                    if username in k:
+                        res[k] = v
+                    if n >= app.config["MAX_RESULTS"] - 1:
+                        break
+                return flask.jsonify(res)
+
             if username not in users_db:
                 return json_response(404, "%s: unknown user" % username)
             else:
