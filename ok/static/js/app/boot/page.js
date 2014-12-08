@@ -1,10 +1,10 @@
 "use strict";
 
 define(
-    [],
-    function() {
-        function initialize() {
-        }
-        return initialize;
+  [],
+  function() {
+    function initialize() {
     }
+    return initialize;
+  }
 );
