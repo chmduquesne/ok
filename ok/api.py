@@ -552,3 +552,9 @@ def help(endpoint=None):
 @app.route("/")
 def root():
     return app.send_static_file("index.html")
+
+@app.after_request
+def debug_cache_off(response):
+    if app.config["DEBUG"]:
+        response.headers["Cache-Control"] = "no-cache, max-age=0"
+    return response
