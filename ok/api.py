@@ -510,7 +510,6 @@ def restrictions(restrictionname=None):
             return json_response(200, {"description": description})
 
 
-@app.route("/")
 @app.route("/config/")
 def config():
     """
@@ -533,7 +532,8 @@ def help(endpoint=None):
     """
     if endpoint is None:
         all_endpoints = [rule.endpoint for rule in
-                         app.url_map.iter_rules() if rule.endpoint != "static"]
+                         app.url_map.iter_rules()
+                         if rule.endpoint != "static" and rule.endpoint != "root"]
         links = dict()
         for e in all_endpoints:
             links[e] = "/help/%s" % e
@@ -547,3 +547,8 @@ def help(endpoint=None):
     response = flask.make_response(func.__doc__)
     response.headers["Content-Type"] = "text/plain"
     return response
+
+
+@app.route("/")
+def root():
+    return app.send_static_file("index.html")

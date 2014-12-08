@@ -185,13 +185,11 @@ class OkAppTestCase(unittest.TestCase):
                 pass
 
     def test_config_url(self):
-        response = self.app.get("/")
+        response = self.app.get("/config/")
         self.assertEqual(response.status_code, 200)
         body = json.loads(response.data)
         self.assertIn("USERS_DB", body)
         self.assertIn("GROUPS_DB", body)
-        response = self.app.get("/config/")
-        self.assertEqual(body, json.loads(response.data))
 
     def test_users_url(self):
         response = self.app.get("/users/")
