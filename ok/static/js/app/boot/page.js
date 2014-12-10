@@ -10,8 +10,8 @@ define(
     breadcrumbsUI
     ) {
     function initialize() {
-      breadcrumbsData.attachTo(window);
       breadcrumbsUI.attachTo(".breadcrumb");
+      breadcrumbsData.attachTo(window);
     }
     return initialize;
   }

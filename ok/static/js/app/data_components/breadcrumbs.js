@@ -26,6 +26,7 @@ define(
       }
 
       this.after("initialize", function() {
+        this.serveBreadcrumbs();
         this.on("hashchange", this.serveBreadcrumbs);
       });
     }
