@@ -2,14 +2,11 @@
 
 requirejs.config({
   baseUrl: '',
-  paths: {
-    "flight": "bower_components/flight"
-  }
 });
 
 require(
   [
-    "flight/lib/debug"
+    "bower_components/flight/lib/debug"
   ],
   function(debug) {
     debug.enable(true);
