@@ -12,6 +12,7 @@ define(
 
     function breadcrumbs(){
 
+      // Build the html for the breadcrumbs from the current url hash
       this.serveBreadcrumbs = function() {
         var components = window.location.hash.substring(1).split("/");
         var params = { "path" : [] };
@@ -20,12 +21,12 @@ define(
           var component = components[i];
           params.path.push({"target": target, "component": component});
         }
-        console.log(params)
         var markup = Mustache.render(templates.breadcrumbs, params);
         this.trigger("breadcrumbsServed", {markup: markup});
       }
 
       this.after("initialize", function() {
+        // serve once before attaching
         this.serveBreadcrumbs();
         this.on("hashchange", this.serveBreadcrumbs);
       });
