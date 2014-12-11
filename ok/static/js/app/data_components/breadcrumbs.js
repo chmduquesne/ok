@@ -22,7 +22,7 @@ define(
           params.path.push({"target": target, "component": component});
         }
         var markup = Mustache.render(templates.breadcrumbs, params);
-        this.trigger("breadcrumbsServed", {markup: markup});
+        this.trigger("dataBreadcrumbsRendered", {markup: markup});
       }
 
       this.after("initialize", function() {

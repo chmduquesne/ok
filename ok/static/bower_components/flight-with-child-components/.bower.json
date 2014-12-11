@@ -1,0 +1,32 @@
+{
+  "name": "flight-with-child-components",
+  "version": "0.2.3",
+  "main": "lib/flight-with-child-components.js",
+  "dependencies": {
+    "flight": ">=1.1.4"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "jasmine-flight": "~3.0.0"
+  },
+  "ignore": [
+    ".*",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "test",
+    "package.json",
+    "karma.conf.js",
+    "Gruntfile.js"
+  ],
+  "homepage": "https://github.com/flightjs/flight-with-teardown",
+  "_release": "0.2.3",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.2.3",
+    "commit": "0d4ac2b380bee31b3e008c650e462d325cf4e662"
+  },
+  "_source": "https://github.com/flightjs/flight-with-teardown.git",
+  "_target": "~0.2.3",
+  "_originalSource": "flight-with-child-components",
+  "_direct": true
+}

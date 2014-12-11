@@ -10,7 +10,11 @@
     </head>
     <body role="document">
 
-        <!-- Fixed navbar -->
+        <div class="alert alert-danger text-center hidden" role="alert">
+            Wow, you look so good!
+        </div>
+
+        <!--
         <nav class="navbar navbar-inverse" role="navigation">
             <div class="container">
                 <div id="navbar" class="navbar-collapse collapse">
@@ -18,9 +22,10 @@
                         <li class="active"><a href="#users/michel">Users</a></li>
                         <li><a href="#groups">Groups</a></li>
                     </ul>
-                </div><!--/.nav-collapse -->
+                </div>
             </div>
         </nav>
+        -->
 
         <div class="container" role="main">
 
@@ -34,65 +39,22 @@
                 </h1>
             </div>
 
-            <form role="form">
-                <div class="form-group">
-                    <input type="search" class="form-control" placeholder="Filter">
-                </div>
-                <div class="form-group hidden">
-                    <a href="#" class="btn btn-default"
-                                role="button">Create</a>
-                </div>
-            </form>
+            <div id="editor">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Filter">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default disabled" type="button">Create</button>
+                    </span>
+                </div><!-- /input-group -->
+            </div>
+
             <hr>
 
-            <table id="users-table" class="table table-striped table-bordered table-hover">
-                <thead>
-                    <tr>
-                        <th>username</th>
-                        <th>groups</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Mark</td>
-                        <td>Otto</td>
-                    </tr>
-                    <tr>
-                        <td>Jacob</td>
-                        <td>Thornton</td>
-                    </tr>
-                    <tr>
-                        <td>Larry</td>
-                        <td>the
-                            Bird</td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <table id="group" class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>group</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>Mark</td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Jacob</td>
-                    </tr>
-                    <tr>
-                        <td>3</td>
-                        <td>Larry<a href="#"><span class="glyphicon glyphicon-remove pull-right"
-                                                   aria-hidden="true"></span></a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div id="display">
+              <p class="text-center">
+              No data
+              </p>
+            <div>
 
         </div>
         <script src="bower_components/jquery/dist/jquery.js"></script>

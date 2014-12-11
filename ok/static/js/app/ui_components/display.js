@@ -6,16 +6,16 @@ define(
   ],
 
   function(defineComponent, templates, Mustache){
-    return defineComponent(breadcrumbs);
+    return defineComponent(display);
 
-    function breadcrumbs(){
+    function display(){
 
       this.update = function(ev, data) {
         this.$node.html(data.markup);
       }
 
       this.after("initialize", function() {
-        this.on(window, "dataBreadcrumbsRendered", this.update);
+        this.on("dataUsersDisplayRendered", this.update);
       });
     }
   }
