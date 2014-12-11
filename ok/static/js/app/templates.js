@@ -35,10 +35,11 @@ define(
             </a>                                    \
           {{/groups}}                               \
             <button                                 \
+              userid={{username}}                   \
               type="button"                         \
               class="btn btn-default btn-xs         \
                      glyphicon glyphicon-remove     \
-                     pull-right"                    \
+                     pull-right invisible"          \
                      title="delete">                \
             </button>                               \
           </td>                                     \
