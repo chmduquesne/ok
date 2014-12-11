@@ -11,7 +11,6 @@ import json
 import re
 import serializeddicts
 import werkzeug.datastructures
-import hashlib
 
 from restrictions import restrictions_manager
 from ok import app
@@ -138,13 +137,6 @@ def parse_qs(qs, keep_blank_values=False, strict_parsing=False):
         )
 
 
-def sha1(s):
-    """
-    computes the sha1 hash of the input string
-    """
-    return hashlib.sha1(s.encode("utf-8")).hexdigest()
-
-
 @app.route("/ok/")
 def ok():
     """
@@ -213,16 +205,14 @@ def ok():
     else:
         if "user" in flask.request.args:
             username = flask.request.args["user"]
-            userhash = sha1(username)
-            if not users_db.get(userhash):
+            if not users_db.get(username):
                 if app.config["AUTO_CREATE"]:
-                    users_db[userhash] = {
-                        "groups": app.config["DEFAULT_GROUPS"],
-                        "name": username
+                    users_db[username] = {
+                        "groups": app.config["DEFAULT_GROUPS"]
                         }
                 else:
                     return json_response(403, "%s: unkown user" % username)
-            group_list = users_db[userhash]["groups"]
+            group_list = users_db[username]["groups"]
 
     data = werkzeug.datastructures.MultiDict()
     if "data" in flask.request.args:
@@ -318,49 +308,44 @@ def users(username=None):
     # list all users
     users_db = get_users_db()
 
-    total_pages = (len(users_db) // app.config["MAX_RESULTS"]) + 1
     page = 1
     if "page" in flask.request.args:
         try:
             page = int(flask.request.args["page"])
         except ValueError:
-            page = total_pages
+            page = len(users_db) // app.config["MAX_RESULTS"] + 1
 
     if username is None:
         res = {}
-        for n, (userkey, userinfos) in enumerate(users_db.iteritems()):
+        for n, (k, v) in enumerate(users_db.iteritems()):
             if page <= (n // app.config["MAX_RESULTS"] + 1) < page + 1:
-                res[userinfos["name"]] = {"groups": userinfos["groups"]}
+                res[k] = v
         return flask.jsonify(res)
     else:
-        userhash = sha1(username)
-
         if flask.request.method == "GET":
             if "as_filter" in flask.request.args:
                 res = {}
-                for n, (userkey, userinfos) in enumerate(users_db.iteritems()):
-                    if username in userinfos["name"]:
-                        res[userinfos["name"]] = {"groups": userinfos["groups"]}
+                for n, (k, v) in enumerate(users_db.iteritems()):
+                    if username in k:
+                        res[k] = v
                     if n >= app.config["MAX_RESULTS"] - 1:
                         break
                 return flask.jsonify(res)
 
-            if userhash not in users_db:
+            if username not in users_db:
                 return json_response(404, "%s: unknown user" % username)
             else:
-                userinfos = users_db[userhash]
-                return flask.jsonify({"groups": userinfos["groups"]})
+                return flask.jsonify(users_db[username])
 
         if flask.request.method in ("POST", "PUT"):
 
             if flask.request.method == "POST":
-                if userhash in users_db:
-                    return json_response(400, "%s: user already exists" %
-                            username)
+                if username in users_db:
+                    return json_response(400, "%s: user already exists")
             if flask.request.method == "PUT":
-                if userhash not in users_db:
-                    return json_response(404, "%s: unknown user" %
-                            username)
+                if username not in users_db:
+                    return json_response(404, "%s: unknown user")
+
             try:
                 group_list = flask.request.form["groups"].split(",")
             except KeyError:
@@ -379,7 +364,7 @@ def users(username=None):
                         return json_response(404, "%s: unknown group" %
                                              groupname)
 
-            users_db[userhash] = {"groups": group_list, "name": username}
+            users_db[username] = {"groups": group_list}
 
             if flask.request.method == "POST":
                 return json_response(201, "%s: user created" % username)
@@ -387,9 +372,9 @@ def users(username=None):
                 return json_response(200, "%s: user updated" % username)
 
         if flask.request.method == "DELETE":
-            if userhash not in users_db:
+            if username not in users_db:
                 return json_response(404, "%s: unknown user" % username)
-            del users_db[userhash]
+            del users_db[username]
             return json_response(200, "/users/%s deleted" % username)
 
 
