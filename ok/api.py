@@ -306,14 +306,11 @@ def users(username=None):
 
     Data Model:
     users = {
-        sha1(username1): {
-           "name": "username1",
+        username1: {
            "groups": ["groupname1", "groupname2", ...]
         },
-        sha1(username2): {
-           "name": "username2",
+        username2: {
            "groups": ["groupname1", "groupname2", ...]
-
         },
         ...
     }
