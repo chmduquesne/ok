@@ -12,9 +12,8 @@ define(
 
     function breadcrumbs(){
 
-      // Build the html for the breadcrumbs from the current url hash
-      this.serveBreadcrumbs = function() {
-        var components = window.location.hash.substring(1).split("/");
+      this.renderBreadcrumbs = function(ev, data) {
+        var components = data.components;
         var params = { "path" : [] };
         for (var i in components) {
           var target = "#" + components.slice(0, i+1).join("/");
@@ -26,9 +25,7 @@ define(
       }
 
       this.after("initialize", function() {
-        // serve once before attaching
-        this.serveBreadcrumbs();
-        this.on("hashchange", this.serveBreadcrumbs);
+        this.on("dataShouldRenderBreadCrumbs", this.renderBreadcrumbs);
       });
     }
   }

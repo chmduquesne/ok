@@ -35,7 +35,7 @@ define(
             </a>                                    \
           {{/groups}}                               \
             <button                                 \
-              userid={{username}}                   \
+              userid="{{{username}}}"               \
               type="button"                         \
               class="btn btn-default btn-xs         \
                      glyphicon glyphicon-remove     \
