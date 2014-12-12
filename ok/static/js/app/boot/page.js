@@ -5,14 +5,14 @@ define(
     "js/app/ui_components/breadcrumbs",
     "js/app/ui_components/display",
     "js/app/data_components/breadcrumbs",
-    "js/app/data_components/usersDisplay",
+    "js/app/data_components/usersMarkup",
     "js/app/data_components/urlhash"
   ],
   function(
     breadcrumbsUI,
     displayUI,
     breadcrumbsData,
-    usersDisplayData,
+    usersMarkupData,
     urlhashData
     ) {
     function initialize() {
@@ -20,7 +20,7 @@ define(
       breadcrumbsUI.attachTo("#breadcrumbs");
       displayUI.attachTo("#display");
       breadcrumbsData.attachTo(window);
-      usersDisplayData.attachTo("#display");
+      usersMarkupData.attachTo("#display");
       urlhashData.attachTo(window);
     }
     return initialize;

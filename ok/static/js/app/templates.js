@@ -9,7 +9,7 @@ define(
     </li>                                           \
     {{/path}}';
 
-    var usersDisplay='                              \
+    var usersMarkup='                              \
     <table class="table table-striped               \
                   table-bordered table-hover">      \
       <thead>                                       \
@@ -50,7 +50,7 @@ define(
     ';
     return {
       breadcrumbs: breadcrumbs,
-      usersDisplay: usersDisplay
+      usersMarkup: usersMarkup
     }
   }
 );

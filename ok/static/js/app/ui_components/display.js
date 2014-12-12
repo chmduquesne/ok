@@ -5,7 +5,7 @@ define(
     "bower_components/flight/lib/component",
   ],
 
-  function(defineComponent, templates, Mustache){
+  function(defineComponent){
     return defineComponent(display);
 
     function display(){

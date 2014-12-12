@@ -8,12 +8,11 @@ define(
   ],
 
   function(defineComponent, templates, Mustache){
-    return defineComponent(usersDisplay);
+    return defineComponent(usersMarkup);
 
-    function usersDisplay(){
+    function usersMarkup(){
 
-      // Build the html for the usersDisplay from the current url hash
-      this.renderUsersDisplay = function() {
+      this.renderUsersMarkup = function() {
         var params = {
           "users": [
             { "username": "mark",
@@ -38,13 +37,12 @@ define(
             },
           ]
         }
-        var markup = Mustache.render(templates.usersDisplay, params);
+        var markup = Mustache.render(templates.usersMarkup, params);
         this.trigger("dataUsersDisplayRendered", {markup: markup});
       }
 
       this.after("initialize", function() {
-        // serve once before attaching
-        this.renderUsersDisplay();
+        this.renderUsersMarkup();
       });
     }
   }
