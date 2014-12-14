@@ -16,6 +16,9 @@ class RestrictionsManager():
     def __init__(self):
         self.func_map = {}
 
+    def __contains__(self, name):
+        return name in self.func_map
+
     def register(self, takes_extra_param=False):
         def func_wrapper(func):
             func_name = func.__name__
@@ -32,8 +35,7 @@ class RestrictionsManager():
         return func_wrapper
 
     def get(self, name):
-        func = self.func_map[name]["function"]
-        return Rule(func)
+        return Rule(self.func_map[name]["function"])
 
     def forget(self, name):
         try:

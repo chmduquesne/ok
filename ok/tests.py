@@ -249,8 +249,6 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        for g in ok.app.config["DEFAULT_GROUPS"]:
-            self.assertIn(g, body["groups"])
         self.assertIn("unrestricted", body["groups"])
 
     def test_users_url_post_user_unexisting_group(self):
@@ -264,26 +262,9 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/users/john")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        for g in ok.app.config["DEFAULT_GROUPS"]:
-            self.assertIn(g, body["groups"])
         self.assertIn("unexisting", body["groups"])
         response = self.app.get("/groups/unexisting")
-        self.assertEqual(response.status_code, 200)
-        body = json.loads(response.data)
-        self.assertEqual(body, dict())
-
-    def test_users_url_post_user_unexisting_group_no_autocreate(self):
-        with OkConfig(NO_AUTO_CREATE):
-            response = self.app.get("/groups/unexisting")
-            self.assertEqual(response.status_code, 404)
-            response = self.app.get("/users/john")
-            body = json.loads(response.data)
-            self.assertEqual(response.status_code, 404)
-            response = self.app.post("/users/john",
-                    data={"groups": "unexisting"})
-            self.assertEqual(response.status_code, 404)
-            response = self.app.get("/users/john")
-            self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
 
     def test_users_url_delete_unexisting_user(self):
         response = self.app.get("/users/john")
@@ -427,20 +408,6 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEquals(response.status_code, 201)
         response = self.app.delete("/groups/mygroup")
         self.assertEquals(response.status_code, 200)
-
-    def test_groups_url_delete_group_also_remove_from_users(self):
-        response = self.app.post("/users/john", data={"groups":"mygroup"})
-        self.assertEquals(response.status_code, 201)
-        response = self.app.get("/users/john")
-        self.assertEquals(response.status_code, 200)
-        self.assertIn("mygroup", json.loads(response.data)["groups"])
-        response = self.app.get("/groups/mygroup")
-        self.assertEquals(response.status_code, 200)
-        response = self.app.delete("/groups/mygroup")
-        self.assertEquals(response.status_code, 200)
-        response = self.app.get("/users/john")
-        self.assertEquals(response.status_code, 200)
-        self.assertNotIn("mygroup", json.loads(response.data)["groups"])
 
     def test_restrictions_url(self):
         response = self.app.get("/restrictions/")
