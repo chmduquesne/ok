@@ -111,8 +111,9 @@ def json_response(status, body={}):
         }
     if not isinstance(body, dict):
         body = {"message": body}
-    body["status"] = status_message[status]
-    body["status_code"] = status
+    if status != 200:
+        body["status"] = status_message[status]
+        body["status_code"] = status
     response = flask.jsonify(body)
     response.status = str(status)
     return response
@@ -141,7 +142,7 @@ def urlencode(s):
     """
     url-encodes the input string
     """
-    return urllib2.quote(s)
+    return urllib2.quote(s.encode("utf-8"))
 
 
 def links(username=None, groupname=None):
@@ -342,9 +343,14 @@ def users(username=None):
             return flask.jsonify(res)
 
         if username not in users_db:
-            return json_response(404, "%s: unknown user" % username)
+            return json_response(404, {
+                "message": "%s: unknown user" % username,
+                "links": links()
+                })
         else:
-            return flask.jsonify(users_db[username])
+            res = users_db[username]
+            res["links"] = links(username)
+            return json_response(200, res)
 
     if flask.request.method in ("POST", "PUT"):
 
@@ -363,15 +369,26 @@ def users(username=None):
         users_db[username] = {"groups": group_list}
 
         if flask.request.method == "POST":
-            return json_response(201, "%s: user created" % username)
+            return json_response(201, {
+                "message": "%s: user created" % username,
+                "links": links(username)
+                })
         else:
-            return json_response(200, "%s: user updated" % username)
+            return json_response(200, {
+                "message": "%s: user updated" % username,
+                "links": links(username)
+                })
 
     if flask.request.method == "DELETE":
         if username not in users_db:
             return json_response(404, "%s: unknown user" % username)
+        res = {
+                "message": "user %s deleted" % username,
+                "data": users_db[username],
+                "links": links(username)
+                }
         del users_db[username]
-        return json_response(200, "/users/%s deleted" % username)
+        return json_response(200, res)
 
 
 @app.route("/groups/")
