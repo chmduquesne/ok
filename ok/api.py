@@ -138,13 +138,6 @@ def parse_qs(qs, keep_blank_values=False, strict_parsing=False):
         )
 
 
-def urlencode(s):
-    """
-    url-encodes the input string
-    """
-    return urllib2.quote(s.encode("utf-8"))
-
-
 def create_user_if_not_exists(username):
     users_db = get_users_db()
 
