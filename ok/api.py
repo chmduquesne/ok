@@ -145,19 +145,24 @@ def urlencode(s):
     return urllib2.quote(s.encode("utf-8"))
 
 
-def links(username=None, groupname=None):
-    """
-    return relevant links
-    """
-    res = {
-            "users": "/users/",
-            "groups": "/groups/",
-            "restrictions" : "/restrictions/"
-        }
-    if username is not None:
-        res["user"] = "/users/" + urlencode(username)
-    if groupname is not None:
-        res["group"] = "/groups/" + urlencode(groupname)
+def create_user_if_not_exists(username):
+    users_db = get_users_db()
+
+    if username not in users_db:
+        return post_user(username, group_list=app.config["DEFAULT_GROUPS"])
+
+
+def url_input_groups():
+    users_db = get_users_db()
+
+    res = app.config["ANONYMOUS_GROUPS"]
+    if "groups" in flask.request.args:
+        res = flask.request.args["groups"].split(",")
+    else:
+        if "user" in flask.request.args:
+            username = flask.request.args["user"]
+            if username in users_db:
+                res = users_db[username]["groups"]
     return res
 
 
@@ -216,22 +221,11 @@ def ok():
     if "url" not in flask.request.args:
         return json_response(400, "Expected a url argument")
 
-    # By default, we assume anonymous groups
-    group_list = app.config["ANONYMOUS_GROUPS"]
-    # Unless the groups are specified
-    if "groups" in flask.request.args:
-        group_list = flask.request.args["groups"].split(",")
-    # If no group is specified, we do a user lookup
-    else:
-        if "user" in flask.request.args:
-            username = flask.request.args["user"]
-            if username not in users_db:
-                if app.config["AUTO_CREATE"]:
-                    users_db[username] = {
-                        "groups": app.config["DEFAULT_GROUPS"]
-                        }
-            if username in users_db:
-                group_list = users_db[username]["groups"]
+    if "user" in flask.request.args:
+        if app.config["AUTO_CREATE"]:
+            create_user_if_not_exists(flask.request.args["user"])
+
+    group_list = url_input_groups()
 
     data = werkzeug.datastructures.MultiDict()
     if "data" in flask.request.args:
@@ -289,6 +283,102 @@ def ok():
     return json_response(403, "Not allowed")
 
 
+def requested_page():
+    res = 1
+    if "page" in flask.request.args:
+        try:
+            res = int(flask.request.args["page"])
+        except ValueError:
+            res = 1
+    return res
+
+
+def page(n):
+    return n // app.config["MAX_RESULTS"] + 1
+
+
+def search_user(s, p=1):
+    users_db = get_users_db()
+
+    res = {}
+    for n, (username, userdata) in enumerate(users_db.iteritems()):
+        if s in username and page(n) == p:
+            res[username] = userdata
+
+    return flask.jsonify(res)
+
+
+def all_users(p=1):
+    users_db = get_users_db()
+
+    res = {}
+    for n, (username, userdata) in enumerate(users_db.iteritems()):
+        if page(n) == p:
+            res[username] = userdata
+
+    return flask.jsonify(res)
+
+
+def get_user(username):
+    users_db = get_users_db()
+
+    if username not in users_db:
+        return json_response(404, {
+            "message": "%s: unknown user" % username
+            })
+    else:
+        return flask.jsonify(users_db[username])
+
+
+def form_input_groups():
+    res = []
+    try:
+        res = flask.request.form["groups"].split(",")
+    except KeyError:
+        res = app.config["DEFAULT_GROUPS"]
+    return res
+
+
+def post_user(username, group_list=[]):
+    users_db = get_users_db()
+
+    if username in users_db:
+        return json_response(400, "%s: user already exists")
+
+    users_db[username] = {"groups": group_list}
+
+    return json_response(201, {
+        "message": "%s: user created" % username,
+        })
+
+
+def put_user(username, group_list=[]):
+    users_db = get_users_db()
+
+    if username not in users_db:
+        return json_response(404, "%s: unknown user")
+
+    users_db[username] = {"groups": group_list}
+
+    return json_response(200, {
+        "message": "%s: user updated" % username,
+        })
+
+
+def delete_user(username):
+    users_db = get_users_db()
+
+    if username not in users_db:
+        return json_response(404, "%s: unknown user" % username)
+    res = {
+            "message": "user %s deleted" % username,
+            "data": users_db[username],
+            "username": username,
+            }
+    del users_db[username]
+    return json_response(200, res)
+
+
 @app.route("/users/")
 @app.route("/users/<username>", methods=["GET", "POST", "DELETE", "PUT"])
 def users(username=None):
@@ -316,79 +406,122 @@ def users(username=None):
         ...
     }
     """
-    # list all users
-    users_db = get_users_db()
-
-    page = 1
-    if "page" in flask.request.args:
-        try:
-            page = int(flask.request.args["page"])
-        except ValueError:
-            page = len(users_db) // app.config["MAX_RESULTS"] + 1
 
     if flask.request.method == "GET":
+        p = requested_page()
         if username is None:
-            res = {}
-            for n, (userkey, uservalue) in enumerate(users_db.iteritems()):
-                if page <= (n // app.config["MAX_RESULTS"] + 1) < page + 1:
-                    res[userkey] = uservalue
-            return flask.jsonify(res)
+            return all_users(p)
         if "as_filter" in flask.request.args:
-            res = {}
-            for n, (userkey, uservalue) in enumerate(users_db.iteritems()):
-                if username in userkey:
-                    res[userkey] = uservalue
-                if n >= app.config["MAX_RESULTS"] - 1:
-                    break
-            return flask.jsonify(res)
+            return search_user(username, p)
+        return get_user(username)
 
-        if username not in users_db:
-            return json_response(404, {
-                "message": "%s: unknown user" % username,
-                "links": links()
-                })
-        else:
-            res = users_db[username]
-            res["links"] = links(username)
-            return json_response(200, res)
+    if flask.request.method == "POST":
+        group_list = form_input_groups()
+        return post_user(username, group_list)
 
-    if flask.request.method in ("POST", "PUT"):
-
-        if flask.request.method == "POST":
-            if username in users_db:
-                return json_response(400, "%s: user already exists")
-        if flask.request.method == "PUT":
-            if username not in users_db:
-                return json_response(404, "%s: unknown user")
-
-        try:
-            group_list = flask.request.form["groups"].split(",")
-        except KeyError:
-            group_list = app.config["DEFAULT_GROUPS"]
-
-        users_db[username] = {"groups": group_list}
-
-        if flask.request.method == "POST":
-            return json_response(201, {
-                "message": "%s: user created" % username,
-                "links": links(username)
-                })
-        else:
-            return json_response(200, {
-                "message": "%s: user updated" % username,
-                "links": links(username)
-                })
+    if flask.request.method == "PUT":
+        group_list = form_input_groups()
+        return put_user(username, group_list)
 
     if flask.request.method == "DELETE":
-        if username not in users_db:
-            return json_response(404, "%s: unknown user" % username)
-        res = {
-                "message": "user %s deleted" % username,
-                "data": users_db[username],
-                "links": links(username)
-                }
-        del users_db[username]
-        return json_response(200, res)
+        return delete_user(username)
+
+
+def get_all_groups():
+    groups_db = get_groups_db()
+
+    return flask.jsonify(groups_db)
+
+
+def get_group(groupname):
+    groups_db = get_groups_db()
+
+    if groupname not in groups_db:
+        return json_response(404, "%s: unknown group" % groupname)
+    else:
+        return flask.jsonify(groups_db[groupname])
+
+
+def form_input_restriction_list(groupname):
+    groups_db = get_groups_db()
+
+    res = []
+    if groupname in groups_db:
+        res = groups_db[groupname]["restrictions"]
+    if "restrictions" in flask.request.form:
+        res = json.loads(flask.request.form["restrictions"])
+    return res
+
+
+def form_input_hint(groupname):
+    groups_db = get_groups_db()
+
+    res = True
+    if groupname in groups_db:
+        res = groups_db[groupname]["hint"]
+    if "hint" in flask.request.form:
+        res = json.loads(flask.request.form["hint"])
+    return res
+
+
+def check_restriction_list(restriction_list):
+    for rule in restriction_list:
+        if not isinstance(rule, list):
+            return False
+        if not len(rule) == 3:
+            return False
+        if not isinstance(rule[0], basestring):
+            return False
+        if not isinstance(rule[1], basestring):
+            return False
+        if not rule[1] in restrictions_manager:
+            return False
+    return True
+
+
+def post_group(groupname, hint=True, restriction_list=[]):
+    groups_db = get_groups_db()
+
+    if groupname in groups_db:
+        return json_response(400, "%s: group already exists")
+
+    groups_db[groupname] = {
+        "hint": hint,
+        "restrictions": restriction_list
+        }
+    return json_response(
+        201, "%s: group created" % groupname
+        )
+
+
+def put_group(groupname, hint=True, restriction_list=[]):
+    groups_db = get_groups_db()
+
+    if groupname not in groups_db:
+        return json_response(404, "%s: unknown group")
+
+    groups_db[groupname] = {
+        "hint": hint,
+        "restrictions": restriction_list
+        }
+
+    return json_response(
+        200, "%s: group updated" % groupname
+        )
+
+
+def delete_group(groupname):
+    groups_db = get_groups_db()
+
+    if groupname not in groups_db:
+        return json_response(404, "%s: unknown group" % groupname)
+    res = {
+            "message": "group %s deleted" % groupname,
+            "data": groups_db[groupname],
+            "groupname": groupname,
+            }
+    del groups_db[groupname]
+    return json_response(200, res)
 
 
 @app.route("/groups/")
@@ -426,78 +559,30 @@ def groups(groupname=None):
         ...
     }
     """
-    groups_db = get_groups_db()
+    if flask.request.method == "GET":
+        if groupname is None:
+            return get_all_groups()
+        else:
+            return get_group(groupname)
 
-    if groupname is None:
-        return flask.jsonify(groups_db)
-    else:
-        if flask.request.method == "GET":
-            if groupname not in groups_db:
-                return json_response(404, "%s: unknown group" % groupname)
-            else:
-                return flask.jsonify(groups_db[groupname])
+    if flask.request.method == "POST":
+        restriction_list = form_input_restriction_list(groupname)
+        hint = form_input_hint(groupname)
+        if not check_restriction_list(restriction_list):
+            return json_response(400, "%s: invalid restrictions" %
+                    restriction_list)
+        return post_group(groupname, hint, restriction_list)
 
-        if flask.request.method in ("POST", "PUT"):
+    if flask.request.method == "PUT":
+        restriction_list = form_input_restriction_list(groupname)
+        hint = form_input_hint(groupname)
+        if not check_restriction_list(restriction_list):
+            return json_response(400, "%s: invalid restrictions" %
+                    restriction_list)
+        return put_group(groupname, hint, restriction_list)
 
-            if flask.request.method == "POST":
-                if groupname in groups_db:
-                    return json_response(400, "%s: group already exists")
-                restriction_list = []
-                hint = True
-            if flask.request.method == "PUT":
-                if groupname not in groups_db:
-                    return json_response(404, "%s: unknown group")
-                restriction_list = groups_db[groupname]["restrictions"]
-                hint = groups_db[groupname]["hint"]
-            try:
-                if "restrictions" in flask.request.form:
-                    restriction_list = json.loads(
-                        flask.request.form["restrictions"]
-                        )
-                if "hint" in flask.request.form:
-                    hint = json.loads(
-                        flask.request.form["hint"]
-                        )
-            except ValueError:
-                return json_response(
-                    400, "Could not json-decode the form input"
-                    )
-            try:
-                for _, restrictionname, _ in restriction_list:
-                    if restrictionname not in restrictions_manager.all():
-                        return json_response(
-                            404, "%s: unknown restriction" %
-                            restrictionname
-                            )
-            except ValueError:
-                return json_response(
-                    400, "%s: values do not unpack as expected" %
-                    json.dumps(restriction_list)
-                    )
-
-            groups_db[groupname] = {
-                "hint": hint,
-                "restrictions": restriction_list
-                }
-
-            if flask.request.method == "POST":
-                return json_response(
-                    201, "%s: group created" % groupname
-                    )
-            if flask.request.method == "PUT":
-                return json_response(
-                    200, "%s: group updated" % groupname
-                    )
-        if flask.request.method == "DELETE":
-            if groupname not in groups_db:
-                return json_response(404, "%s: unknown group" % groupname)
-            del groups_db[groupname]
-            users_db = get_users_db()
-            for username, groups in users_db.iteritems():
-                if groupname in groups["groups"]:
-                    groups["groups"].remove(groupname)
-                    users_db[username] = groups
-            return json_response(200, "/groups/%s deleted" % groupname)
+    if flask.request.method == "DELETE":
+        return delete_group(groupname)
 
 
 @app.route("/restrictions/")

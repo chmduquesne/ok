@@ -374,7 +374,7 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.post("/groups/mygroup",
                 data={"restrictions": json.dumps(myrestrictions)}
                 )
-        self.assertEquals(response.status_code, 404)
+        self.assertEquals(response.status_code, 400)
 
     def test_groups_url_put_unknown_group(self):
         response = self.app.put("/groups/doesnotexist")
