@@ -69,7 +69,7 @@ def restricted_ingredient(groupname, http_scheme, http_netloc, http_path,
 ##
 
 def urlencode(s):
-    return urllib2.quote(s)
+    return urllib2.quote(s.encode("utf-8"))
 
 class OkConfig:
     """
@@ -85,7 +85,7 @@ class OkConfig:
             f.write(config_text)
 
     def mktemp(self):
-        fd, filename = tempfile.mkstemp(suffix='.py')
+        fd, filename = tempfile.mkstemp(suffix=".py")
         os.close(fd)
         return filename
 
@@ -473,7 +473,7 @@ class OkAppTestCase(unittest.TestCase):
 
     def test_ok_url_advanced_restrictions_weird_username(self):
         with OkConfig(ADVANCED_RESTRICTIONS):
-            myusername = urlencode("Émilien Jeunêt")
+            myusername = urlencode(u'Émilien Jeunêt')
             myrestrictions = [
                         ["/recipes", "http_methods", ["GET"]],
                         ["/recipes", "restricted_ingredient", "fruits"]
