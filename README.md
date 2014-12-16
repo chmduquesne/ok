@@ -1,3 +1,5 @@
+<!-- vim: set fileencoding=utf-8 -->
+
 OK
 ==
 
@@ -37,3 +39,14 @@ look like for users who have different rights. However, it can help you
 by returning a display hint. Whenever ok authorizes a request, it returns
 a customizable json string that your webservices can use to modify their
 behavior.
+
+Status
+------
+
+* ✔ Rest API to manage users, groups and restrictions
+* ✔ User-defined restrictions automatically loaded from the config file
+* ✔ Extended test suite
+* ✘ GUI for managing users and groups
+* ✘ Embedded tester for checking that changes don't introduce regressions
+* ✘ Extended documentation
+
