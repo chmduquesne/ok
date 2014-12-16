@@ -53,10 +53,14 @@ Status
 Usage
 -----
 
-For now:
+Installation:
 
     git clone https://github.com/chmduquesne/ok.git
     python setup.py install
+
+Note: To make packaging easier, ok can load a virtualenv at startup. It
+will try to load the virtualenv from the environment variable
+PYTHON_VIRTUALENV.
 
 Define some restrictions:
 
@@ -104,3 +108,5 @@ Check that john can get recipes with fruits, but not veggies:
 
     curl http://localhost:8080/ok/?url=%2Frecipes%3Fingredient%3Deggplant&user=john
     (returns 403)
+
+Note: Ok will come with a GUI to make the management easier.
