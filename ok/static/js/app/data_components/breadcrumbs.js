@@ -18,7 +18,7 @@ define(
         for (var i in components) {
           var target = "#" + components.slice(0, i+1).join("/");
           var component = components[i];
-          params.path.push({"target": target, "component": component});
+          params.path.push({"target": target, "component": decodeURIComponent(component)});
         }
         var markup = Mustache.render(templates.breadcrumbs, params);
         this.trigger("dataBreadcrumbsRendered", {markup: markup});

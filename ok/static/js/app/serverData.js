@@ -6,9 +6,8 @@ define(
   ],
   function(defineComponent){
     return defineComponent(serverData);
-
     function serverData(){
-      this.onDataShouldGetUsers(ev, data){
+      this.onDataShouldGetUsers = function(ev, data){
         $.ajax("/users/", {
           type: "GET",
           dataType: "json",
@@ -18,7 +17,7 @@ define(
             }
           });
       }
-      this.onDataShouldGetUser(ev, data){
+      this.onDataShouldGetUser = function(ev, data){
         $.ajax("/users/" + data.encodedUsername, {
           type: "GET",
           dataType: "json",
@@ -28,7 +27,7 @@ define(
             }
           });
       }
-      this.onDataShouldPutUser(ev, data){
+      this.onDataShouldPutUser = function(ev, data){
         $.ajax("/users/" + data.encodedUsername, {
           type: "PUT",
           dataType: "json",
@@ -39,7 +38,7 @@ define(
             }
           });
       }
-      this.onDataShouldPostUser(ev, data){
+      this.onDataShouldPostUser = function(ev, data){
         $.ajax("/users/" + data.encodedUsername, {
           type: "POST",
           dataType: "json",
@@ -50,7 +49,7 @@ define(
             }
           });
       }
-      this.onDataShouldDeleteUser(ev, data){
+      this.onDataShouldDeleteUser = function(ev, data){
         $.ajax("/users/" + data.encodedUsername, {
           type: "DELETE",
           dataType: "json",
@@ -60,7 +59,7 @@ define(
             }
           });
       }
-      this.onDataShouldGetGroups(ev, data){
+      this.onDataShouldGetGroups = function(ev, data){
         $.ajax("/groups/", {
           type: "GET",
           dataType: "json",
@@ -70,7 +69,7 @@ define(
             }
           });
       }
-      this.onDataShouldGetGroup(ev, data){
+      this.onDataShouldGetGroup = function(ev, data){
         $.ajax("/groups/" + data.encodedGroupname, {
           type: "GET",
           dataType: "json",
@@ -80,7 +79,7 @@ define(
             }
           });
       }
-      this.onDataShouldPutGroup(ev, data){
+      this.onDataShouldPutGroup = function(ev, data){
         $.ajax("/groups/" + data.encodedGroupname, {
           type: "PUT",
           dataType: "json",
@@ -91,7 +90,7 @@ define(
             }
           });
       }
-      this.onDataShouldPostGroup(ev, data){
+      this.onDataShouldPostGroup = function(ev, data){
         $.ajax("/groups/" + data.encodedGroupname, {
           type: "POST",
           dataType: "json",
@@ -102,7 +101,7 @@ define(
             }
           });
       }
-      this.onDataShouldDeleteGroup(ev, data){
+      this.onDataShouldDeleteGroup = function(ev, data){
         $.ajax("/groups/" + data.encodedGroupname, {
           type: "DELETE",
           dataType: "json",
@@ -112,7 +111,7 @@ define(
             }
           });
       }
-      this.onDataShouldGetRestrictions(ev, data){
+      this.onDataShouldGetRestrictions = function(ev, data){
         $.ajax("/restrictions/", {
           type: "GET",
           dataType: "json",
@@ -122,7 +121,7 @@ define(
             }
           });
       }
-      this.onDataShouldGetRestriction(ev, data){
+      this.onDataShouldGetRestriction = function(ev, data){
         $.ajax("/restrictions/" + data.encodedRestrictionName, {
           type: "GET",
           dataType: "json",
@@ -132,6 +131,21 @@ define(
             }
           });
       }
+
+      this.after("initialize", function() {
+        this.on("dataShouldGetUsers", this.onDataShouldGetUsers);
+        this.on("dataShouldGetUser", this.onDataShouldGetUser);
+        this.on("dataShouldPutUser", this.onDataShouldPutUser);
+        this.on("dataShouldPostUser", this.onDataShouldPostUser);
+        this.on("dataShouldDeleteUser", this.onDataShouldDeleteUser);
+        this.on("dataShouldGetGroups", this.onDataShouldGetGroups);
+        this.on("dataShouldGetGroup", this.onDataShouldGetGroup);
+        this.on("dataShouldPutGroup", this.onDataShouldPutGroup);
+        this.on("dataShouldPostGroup", this.onDataShouldPostGroup);
+        this.on("dataShouldDeleteGroup", this.onDataShouldDeleteGroup);
+        this.on("dataShouldGetRestrictions", this.onDataShouldGetRestrictions);
+        this.on("dataShouldGetRestriction", this.onDataShouldGetRestriction);
+      });
     }
   }
 );
