@@ -1,0 +1,32 @@
+{
+  "name": "flight-with-state",
+  "version": "1.2.1",
+  "main": "lib/with-state.js",
+  "dependencies": {
+    "flight": "^1.2.0"
+  },
+  "devDependencies": {
+    "jasmine-flight": "^2.2.0"
+  },
+  "ignore": [
+    ".gitignore",
+    ".gitattributes",
+    ".travis.yml",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "test",
+    "package.json",
+    "karma.conf.js"
+  ],
+  "homepage": "https://github.com/flightjs/flight-with-state",
+  "_release": "1.2.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "v1.2.1",
+    "commit": "bf3af415daa6aa04f50e5e163675ba1a420594e4"
+  },
+  "_source": "https://github.com/flightjs/flight-with-state.git",
+  "_target": "~1.2.1",
+  "_originalSource": "flight-with-state",
+  "_direct": true
+}

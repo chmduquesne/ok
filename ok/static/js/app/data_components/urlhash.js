@@ -22,39 +22,33 @@ define(
         if (components.length == 1) {
           if (components[0] == "users") {
             this.trigger("uiShouldShowMultipleUsersView");
-            this.trigger("dataShouldGetUsers");
             this.trigger("dataShouldRenderBreadCrumbs", {components: components});
             return;
           }
           if (components[0] == "groups") {
             this.trigger("uiShouldShowMultipleGroupsView");
-            this.trigger("dataShouldGetGroups");
             this.trigger("dataShouldRenderBreadCrumbs", {components: components});
             return;
           }
           if (components[0] == "restrictions") {
             this.trigger("uiShouldShowMultipleRestrictionsView");
-            this.trigger("dataShouldGetRestrictions");
             this.trigger("dataShouldRenderBreadCrumbs", {components: components});
             return;
           }
         }
         if (components.length == 2) {
           if (components[0] == "users") {
-            this.trigger("uiShouldShowSingleUserView", {username: components[1]});
-            this.trigger("dataShouldGetUser", {encodedUsername: components[1]});
+            this.trigger("uiShouldShowSingleUserView", {encodedUsername: components[1]});
             this.trigger("dataShouldRenderBreadCrumbs", {components: components});
             return;
           }
           if (components[0] == "groups") {
-            this.trigger("uiShouldShowSingleGroupView", {groupname: components[1]});
-            this.trigger("dataShouldGetGroup", {encodedGroupname: components[1]});
+            this.trigger("uiShouldShowSingleGroupView", {encodedGroupname: components[1]});
             this.trigger("dataShouldRenderBreadCrumbs", {components: components});
             return;
           }
           if (components[0] == "restrictions") {
-            this.trigger("uiShouldShowSingleRestrictionView", {groupname: components[1]});
-            this.trigger("dataShouldGetRestriction", {encodedRestrictionName: components[1]});
+            this.trigger("uiShouldShowSingleRestrictionView", {encodedRestrictionName: components[1]});
             this.trigger("dataShouldRenderBreadCrumbs", {components: components});
             return;
           }
