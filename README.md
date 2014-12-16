@@ -50,3 +50,57 @@ Status
 * ✘ Embedded tester for checking that changes don't introduce regressions
 * ✘ Extended documentation
 
+Usage
+-----
+
+For now:
+
+    git clone https://github.com/chmduquesne/ok.git
+    python setup.py install
+
+Define some restrictions:
+
+    # File ~/ok_config.py
+    from ok.restrictions import restrictions_manager
+
+    categories = {
+        "fruits": ["banana", "apple"],
+        "vegetables": ["eggplant"]
+    }
+    @restrictions_manager.register(takes_extra_param=True)
+    def restricted_ingredient(groupname, http_scheme, http_netloc, http_path,
+            http_query, http_fragment, http_username, http_password,
+            http_hostname, http_port, http_method, http_data,
+            restriction_params):
+    """
+    Restrict the ingredient argument to a given category
+    """
+    category = restriction_params
+    if "ingredient" in http_query:
+        return http_query["ingredient"] in categories[category]
+    return True
+
+Launch ok:
+
+    export OK_CONFIG="~/ok_config.py"
+    ok-serve
+
+Create the group fruitlovers. `http_methods` is a builtin restriction, while
+`restricted_ingredients` was user-defined.
+
+    curl http://localhost:8080/groups/fruitlovers -X POST                       \
+        --data 'restrictions=[["/recipes", "http_methods", ["GET"]],            \
+                              ["/recipes", "restricted_ingredient", "fruits"]]'
+
+Create the user john in fruitlovers:
+
+    curl http://localhost:8080/users/john -X POST                       \
+        --data 'groups=fruitlovers'
+
+Check that john can get recipes with fruits, but not veggies:
+
+    curl http://localhost:8080/ok/?url=%2Frecipes%3Fingredient%3Dbanana&user=john
+    (returns 200)
+
+    curl http://localhost:8080/ok/?url=%2Frecipes%3Fingredient%3Deggplant&user=john
+    (returns 403)
