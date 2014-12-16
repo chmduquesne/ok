@@ -7,7 +7,7 @@ define(
   ],
 
   function(defineComponent, withState){
-    return defineComponent(display, withState);
+    return defineComponent(withState, display);
 
     function display(){
 
@@ -19,8 +19,8 @@ define(
         view: "multipleUsers"
       });
 
-      this.switchToView = function(ev, data){
-        views = {
+      this.switchView = function(ev, data){
+        var views = {
           "uiShouldShowMultipleUsersView": "multipleUsers",
           "uiShouldShowMultipleGroupsView": "multipleGroups",
           "uiShouldShowMultipleRestrictionsView": "multipleRestrictions",
@@ -28,17 +28,21 @@ define(
           "uiShouldShowSingleGroupView": "singleGroup",
           "uiShouldShowSingleRestrictionView": "singleRestriction"
         };
-        dataEvents = {
+        this.mergeState({
+          view: views[ev]
+        });
+        this.requestData(ev, data);
+      };
+
+      this.requestData = function(ev, data){
+        var dataEvents = {
           "uiShouldShowMultipleUsersView": "dataShouldGetUsers",
           "uiShouldShowMultipleGroupsView": "dataShouldGetGroups",
           "uiShouldShowMultipleRestrictionsView": "dataShouldGetRestriction",
           "uiShouldShowSingleUserView": "dataShouldGetUser",
           "uiShouldShowSingleGroupView": "dataShouldGetGroup",
           "uiShouldShowSingleRestrictionView": "dataShouldGetRestriction"
-        }
-        this.mergeState({
-          view: views[ev]
-        });
+        };
         this.trigger(dataEvents[ev], data);
       };
 
@@ -59,15 +63,15 @@ define(
           var user = $( this ).attr("userid");
           console.log("delete " + user);
         });
-      }
+      };
 
       this.after("initialize", function() {
-        this.on("uiShouldShowMultipleUsersView", this.switchToView);
-        this.on("uiShouldShowMultipleGroupsView", this.switchToView);
-        this.on("uiShouldShowMultipleRestrictionsView", this.switchToView);
-        this.on("uiShouldShowSingleUserView", this.switchToView);
-        this.on("uiShouldShowSingleGroupView", this.switchToView);
-        this.on("uiShouldShowSingleRestrictionView", this.switchToView);
+        this.on(window, "uiShouldShowMultipleUsersView", this.switchView);
+        this.on(window, "uiShouldShowMultipleGroupsView", this.switchView);
+        this.on(window, "uiShouldShowMultipleRestrictionsView", this.switchView);
+        this.on(window, "uiShouldShowSingleUserView", this.switchView);
+        this.on(window, "uiShouldShowSingleGroupView", this.switchView);
+        this.on(window, "uiShouldShowSingleRestrictionView", this.switchView);
         this.on("dataUsersDisplayRendered", this.onUsersRendered);
       });
     }
