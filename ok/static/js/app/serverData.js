@@ -13,7 +13,7 @@ define(
           dataType: "json",
           context: this,
           success: function(response) {
-              this.trigger("dataUsersReceived", response);
+              this.trigger("dataUsersReceived", {response: response});
             }
           });
       }
@@ -23,7 +23,7 @@ define(
           dataType: "json",
           context: this,
           success: function(response) {
-              this.trigger("dataUserReceived", response);
+              this.trigger("dataUserReceived", {response: response});
             }
           });
       }
@@ -34,7 +34,7 @@ define(
           data: data.userData,
           context: this,
           success: function(response) {
-              this.trigger("dataUserUpdated", response);
+              this.trigger("dataUserUpdated", {response: response});
             }
           });
       }
@@ -45,7 +45,7 @@ define(
           data: data.userData,
           context: this,
           success: function(response) {
-              this.trigger("dataUserCreated", response);
+              this.trigger("dataUserCreated", {response: response});
             }
           });
       }
@@ -55,7 +55,7 @@ define(
           dataType: "json",
           context: this,
           success: function(response) {
-              this.trigger("dataUserDeleted", response);
+              this.trigger("dataUserDeleted", {response: response});
             }
           });
       }
@@ -65,7 +65,7 @@ define(
           dataType: "json",
           context: this,
           success: function(response) {
-              this.trigger("dataGroupsReceived", response);
+              this.trigger("dataGroupsReceived", {response: response});
             }
           });
       }
@@ -75,7 +75,7 @@ define(
           dataType: "json",
           context: this,
           success: function(response) {
-              this.trigger("dataGroupReceived", response);
+              this.trigger("dataGroupReceived", {response: response});
             }
           });
       }
@@ -86,7 +86,7 @@ define(
           data: data.groupData,
           context: this,
           success: function(response) {
-              this.trigger("dataGroupUpdated", response);
+              this.trigger("dataGroupUpdated", {response: response});
             }
           });
       }
@@ -97,7 +97,7 @@ define(
           data: data.groupData,
           context: this,
           success: function(response) {
-              this.trigger("dataGroupCreated", response);
+              this.trigger("dataGroupCreated", {response: response});
             }
           });
       }
@@ -107,7 +107,7 @@ define(
           dataType: "json",
           context: this,
           success: function(response) {
-              this.trigger("dataGroupDeleted", response);
+              this.trigger("dataGroupDeleted", {response: response});
             }
           });
       }
@@ -117,7 +117,7 @@ define(
           dataType: "json",
           context: this,
           success: function(response) {
-              this.trigger("dataRestrictionsReceived", response);
+              this.trigger("dataRestrictionsReceived", {response: response});
             }
           });
       }
@@ -127,7 +127,7 @@ define(
           dataType: "json",
           context: this,
           success: function(response) {
-              this.trigger("dataRestrictionReceived", response);
+              this.trigger("dataRestrictionReceived", {response: response});
             }
           });
       }

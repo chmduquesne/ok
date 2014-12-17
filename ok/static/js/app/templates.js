@@ -62,7 +62,7 @@ define(
       {{#groups}}                                   \
       <tr>                                          \
           <td>                                      \
-            <a href="#users/{{encodedgroupname}}">  \
+            <a href="#groups/{{encodedgroupname}}"> \
               {{groupname}}                         \
             </a>                                    \
             <button                                 \

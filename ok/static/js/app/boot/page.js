@@ -6,6 +6,7 @@ define(
     "js/app/ui_components/display",
     "js/app/data_components/breadcrumbs",
     "js/app/data_components/usersMarkup",
+    "js/app/data_components/groupsMarkup",
     "js/app/data_components/urlhash",
     "js/app/serverData",
   ],
@@ -14,6 +15,7 @@ define(
     displayUI,
     breadcrumbsData,
     usersMarkupData,
+    groupsMarkupData,
     urlhashData,
     serverData
     ) {
@@ -23,8 +25,12 @@ define(
       displayUI.attachTo("#display");
       breadcrumbsData.attachTo(window);
       usersMarkupData.attachTo("#display");
-      urlhashData.attachTo(window);
+      groupsMarkupData.attachTo("#display");
       serverData.attachTo(window);
+
+      // The urlhash is the main trigger, initialize it after everything
+      // else is ready and interconnected.
+      urlhashData.attachTo(window);
     }
     return initialize;
   }

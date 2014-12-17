@@ -29,7 +29,7 @@ define(
           "uiShouldShowSingleRestrictionView": "singleRestriction"
         };
         this.mergeState({
-          view: views[ev]
+          view: views[ev.type]
         });
         this.requestData(ev, data);
       };
@@ -43,11 +43,32 @@ define(
           "uiShouldShowSingleGroupView": "dataShouldGetGroup",
           "uiShouldShowSingleRestrictionView": "dataShouldGetRestriction"
         };
-        this.trigger(dataEvents[ev], data);
+        this.trigger(window, dataEvents[ev.type], data);
       };
 
       this.onUsersRendered = function(ev, data) {
+        console.log(this.state.view);
         if (this.state.view != "multipleUsers"){
+          return;
+        }
+        this.$node.html(data.markup);
+        this.$node.find("tr").hover(
+            function(){
+              $(".btn", this).removeClass("invisible");
+            },
+            function(){
+              $(".btn", this).addClass("invisible");
+            }
+            );
+        this.$node.find(".btn.glyphicon-remove").click(function(){
+          var user = $( this ).attr("userid");
+          console.log("delete " + user);
+        });
+      };
+
+      this.onGroupsRendered = function(ev, data) {
+        console.log(this.state.view);
+        if (this.state.view != "multipleGroups"){
           return;
         }
         this.$node.html(data.markup);
@@ -72,7 +93,8 @@ define(
         this.on(window, "uiShouldShowSingleUserView", this.switchView);
         this.on(window, "uiShouldShowSingleGroupView", this.switchView);
         this.on(window, "uiShouldShowSingleRestrictionView", this.switchView);
-        this.on("dataUsersDisplayRendered", this.onUsersRendered);
+        this.on("dataUsersMarkupRendered", this.onUsersRendered);
+        this.on("dataGroupsMarkupRendered", this.onGroupsRendered);
       });
     }
   }

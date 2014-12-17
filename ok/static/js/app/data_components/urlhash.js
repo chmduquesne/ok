@@ -14,7 +14,7 @@ define(
         // See http://stackoverflow.com/questions/1703552/encoding-of-window-location-hash
         var hash = location.href.split("#")[1] || "";
         var components = hash.split("/");
-        console.log("hash changed to " + hash);
+
         if (components.length == 0 || components.length > 2){
           location.assign("#users");
           return;
@@ -57,8 +57,10 @@ define(
       }
 
       this.after("initialize", function() {
-        this.onHashchange();
         this.on(window, "hashchange", this.onHashchange);
+
+        // Trigger the first "hash change"
+        this.onHashchange();
       });
     }
   }
