@@ -56,7 +56,7 @@ define(
 
       this.renderUser = function(ev, data){
         var params = {"groups": []};
-        for (i in data.response["groups"]){
+        for (var i in data.response["groups"]){
           params.groups.push({
             "groupname": data.response["groups"][i],
             "encodedgroupname": encodeURIComponent(data.response["groups"][i])
@@ -69,8 +69,8 @@ define(
       this.renderGroup = function(ev, data){
         var params = {"restrictions": [], "hint": true};
         params["hint"] = JSON.stringify(data.response["hint"]);
-        for (i in data.response["restrictions"]){
-          r = data.response.restrictions[i]
+        for (var i in data.response["restrictions"]){
+          var r = data.response.restrictions[i];
           params.restrictions.push({
             "pattern": r[0],
             "restrictionname": r[1],
