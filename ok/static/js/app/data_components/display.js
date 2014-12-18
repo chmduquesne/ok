@@ -29,8 +29,8 @@ define(
             "groups": groupList
           });
         }
-        var markup = Mustache.render(templates.usersMarkup, params);
-        this.trigger("#display", "dataUsersRendered", {markup: markup});
+        var markup = Mustache.render(templates.usersDisplay, params);
+        this.trigger("#display", "dataDisplayUsersRendered", {markup: markup});
       }
 
       this.renderGroups = function(ev, data) {
@@ -38,8 +38,8 @@ define(
         for (var group in data.response){
           params.groups.push({"groupname": group, "encodedgroupname": encodeURIComponent(group)});
         }
-        var markup = Mustache.render(templates.groupsMarkup, params);
-        this.trigger("#display", "dataGroupsRendered", {markup: markup});
+        var markup = Mustache.render(templates.groupsDisplay, params);
+        this.trigger("#display", "dataDisplayGroupsRendered", {markup: markup});
       }
 
       this.renderRestrictions = function(ev, data){
@@ -50,8 +50,8 @@ define(
             "encodedrestrictionname": encodeURIComponent(restriction)
           });
         }
-        var markup = Mustache.render(templates.restrictionsMarkup, params);
-        this.trigger("#display", "dataRestrictionsRendered", {markup: markup});
+        var markup = Mustache.render(templates.restrictionsDisplay, params);
+        this.trigger("#display", "dataDisplayRestrictionsRendered", {markup: markup});
       };
 
       this.renderUser = function(ev, data){
@@ -62,8 +62,8 @@ define(
             "encodedgroupname": encodeURIComponent(data.response["groups"][i])
           });
         }
-        var markup = Mustache.render(templates.userMarkup, params);
-        this.trigger("#display", "dataUserRendered", {markup: markup});
+        var markup = Mustache.render(templates.userDisplay, params);
+        this.trigger("#display", "dataDisplayUserRendered", {markup: markup});
       };
 
       this.renderGroup = function(ev, data){
@@ -78,14 +78,14 @@ define(
             "parameters": JSON.stringify(r[2])
           });
         }
-        var markup = Mustache.render(templates.groupMarkup, params);
-        this.trigger("#display", "dataGroupRendered", {markup: markup});
+        var markup = Mustache.render(templates.groupDisplay, params);
+        this.trigger("#display", "dataDisplayGroupRendered", {markup: markup});
       };
 
       this.renderRestriction = function(ev, data){
         var params = {"description": data.response.description.doc};
-        var markup = Mustache.render(templates.restrictionMarkup, params);
-        this.trigger("#display", "dataRestrictionRendered", {markup: markup});
+        var markup = Mustache.render(templates.restrictionDisplay, params);
+        this.trigger("#display", "dataDisplayRestrictionRendered", {markup: markup});
       };
 
       this.after("initialize", function() {

@@ -9,7 +9,7 @@ define(
     </li>                                           \
     {{/path}}';
 
-    var usersMarkup='                               \
+    var usersDisplay='                               \
     <table class="table table-striped               \
                   table-bordered table-hover">      \
       <thead>                                       \
@@ -42,7 +42,7 @@ define(
     </table>                                        \
     ';
 
-    var groupsMarkup='                              \
+    var groupsDisplay='                              \
     <table class="table table-striped               \
                   table-bordered table-hover">      \
       <thead>                                       \
@@ -64,7 +64,7 @@ define(
     </table>                                        \
     ';
 
-    var restrictionsMarkup='                                    \
+    var restrictionsDisplay='                                    \
     <table class="table table-striped                           \
                   table-bordered table-hover">                  \
       <thead>                                                   \
@@ -86,7 +86,7 @@ define(
     </table>                                                    \
     ';
 
-    var userMarkup='                                \
+    var userDisplay='                                \
     <table class="table table-striped               \
                   table-bordered table-hover">      \
       <thead>                                       \
@@ -108,7 +108,7 @@ define(
     </table>                                        \
     ';
 
-    var groupMarkup='                                           \
+    var groupDisplay='                                           \
     <p><b>Hint</b></p>                                          \
     <pre>                                                       \
     {{hint}}                                                    \
@@ -143,7 +143,7 @@ define(
     </table>                                                    \
     ';
 
-    var restrictionMarkup='                         \
+    var restrictionDisplay='                         \
     <p><b>Description</b></p>                       \
     <pre>                                           \
     {{description}}                                 \
@@ -152,12 +152,12 @@ define(
 
     return {
       breadcrumbs: breadcrumbs,
-      usersMarkup: usersMarkup,
-      groupsMarkup: groupsMarkup,
-      restrictionsMarkup: restrictionsMarkup,
-      userMarkup: userMarkup,
-      groupMarkup: groupMarkup,
-      restrictionMarkup: restrictionMarkup
+      usersDisplay: usersDisplay,
+      groupsDisplay: groupsDisplay,
+      restrictionsDisplay: restrictionsDisplay,
+      userDisplay: userDisplay,
+      groupDisplay: groupDisplay,
+      restrictionDisplay: restrictionDisplay
     }
   }
 );
