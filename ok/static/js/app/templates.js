@@ -19,7 +19,7 @@ define(
           </tr>                                     \
       </thead>                                      \
       <tbody>                                       \
-      {{#u ers}}                                    \
+      {{#users}}                                    \
       <tr>                                          \
           <td>                                      \
             <a href="#users/{{encodedusername}}">   \
