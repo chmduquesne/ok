@@ -5,8 +5,7 @@ define(
     "js/app/ui_components/breadcrumbs",
     "js/app/ui_components/display",
     "js/app/data_components/breadcrumbs",
-    "js/app/data_components/usersMarkup",
-    "js/app/data_components/groupsMarkup",
+    "js/app/data_components/display",
     "js/app/data_components/urlhash",
     "js/app/serverData",
   ],
@@ -14,8 +13,7 @@ define(
     breadcrumbsUI,
     displayUI,
     breadcrumbsData,
-    usersMarkupData,
-    groupsMarkupData,
+    displayData,
     urlhashData,
     serverData
     ) {
@@ -24,8 +22,7 @@ define(
       breadcrumbsUI.attachTo("#breadcrumbs");
       displayUI.attachTo("#display");
       breadcrumbsData.attachTo(window);
-      usersMarkupData.attachTo("#display");
-      groupsMarkupData.attachTo("#display");
+      displayData.attachTo(window);
       serverData.attachTo(window);
 
       // The urlhash is the main trigger, initialize it after everything

@@ -15,41 +15,37 @@ define(
         var hash = location.href.split("#")[1] || "";
         var components = hash.split("/");
 
+        this.trigger("dataShouldRenderBreadCrumbs", {components: components});
+
         if (components.length == 0 || components.length > 2){
           location.assign("#users");
           return;
         }
         if (components.length == 1) {
           if (components[0] == "users") {
-            this.trigger("uiShouldShowMultipleUsersView");
-            this.trigger("dataShouldRenderBreadCrumbs", {components: components});
+            this.trigger("dataShouldGetUsers");
             return;
           }
           if (components[0] == "groups") {
-            this.trigger("uiShouldShowMultipleGroupsView");
-            this.trigger("dataShouldRenderBreadCrumbs", {components: components});
+            this.trigger("dataShouldGetGroups");
             return;
           }
           if (components[0] == "restrictions") {
-            this.trigger("uiShouldShowMultipleRestrictionsView");
-            this.trigger("dataShouldRenderBreadCrumbs", {components: components});
+            this.trigger("dataShouldGetRestrictions");
             return;
           }
         }
         if (components.length == 2) {
           if (components[0] == "users") {
-            this.trigger("uiShouldShowSingleUserView", {encodedUsername: components[1]});
-            this.trigger("dataShouldRenderBreadCrumbs", {components: components});
+            this.trigger("dataShouldGetUser", {encodedUsername: components[1]});
             return;
           }
           if (components[0] == "groups") {
-            this.trigger("uiShouldShowSingleGroupView", {encodedGroupname: components[1]});
-            this.trigger("dataShouldRenderBreadCrumbs", {components: components});
+            this.trigger("dataShouldGetGroup", {encodedGroupname: components[1]});
             return;
           }
           if (components[0] == "restrictions") {
-            this.trigger("uiShouldShowSingleRestrictionView", {encodedRestrictionName: components[1]});
-            this.trigger("dataShouldRenderBreadCrumbs", {components: components});
+            this.trigger("dataShouldGetRestriction", {encodedRestrictionName: components[1]});
             return;
           }
         }

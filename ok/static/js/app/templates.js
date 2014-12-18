@@ -19,7 +19,7 @@ define(
           </tr>                                     \
       </thead>                                      \
       <tbody>                                       \
-      {{#users}}                                    \
+      {{#u ers}}                                    \
       <tr>                                          \
           <td>                                      \
             <a href="#users/{{encodedusername}}">   \
@@ -35,14 +35,6 @@ define(
             {{groupname}}                           \
             </a>                                    \
           {{/groups}}                               \
-            <button                                 \
-              userid="{{encodedusername}}"          \
-              type="button"                         \
-              class="btn btn-default btn-xs         \
-                     glyphicon glyphicon-remove     \
-                     pull-right invisible"          \
-                     title="delete">                \
-            </button>                               \
           </td>                                     \
       </tr>                                         \
       {{/users}}                                    \
@@ -65,14 +57,6 @@ define(
             <a href="#groups/{{encodedgroupname}}"> \
               {{groupname}}                         \
             </a>                                    \
-            <button                                 \
-              groupid="{{encodedgroupname}}"        \
-              type="button"                         \
-              class="btn btn-default btn-xs         \
-                     glyphicon glyphicon-remove     \
-                     pull-right invisible"          \
-                     title="delete">                \
-            </button>                               \
           </td>                                     \
       </tr>                                         \
       {{/groups}}                                   \
@@ -80,45 +64,100 @@ define(
     </table>                                        \
     ';
 
-    var singleGroupMarkup='                         \
+    var restrictionsMarkup='                                    \
+    <table class="table table-striped                           \
+                  table-bordered table-hover">                  \
+      <thead>                                                   \
+          <tr>                                                  \
+              <th>restriction</th>                              \
+          </tr>                                                 \
+      </thead>                                                  \
+      <tbody>                                                   \
+      {{#restrictions}}                                         \
+      <tr>                                                      \
+          <td>                                                  \
+            <a href="#restrictions/{{encodedrestrictionname}}"> \
+              {{restrictionname}}                               \
+            </a>                                                \
+          </td>                                                 \
+      </tr>                                                     \
+      {{/restrictions}}                                         \
+      <tbody>                                                   \
+    </table>                                                    \
+    ';
+
+    var userMarkup='                                \
     <table class="table table-striped               \
                   table-bordered table-hover">      \
       <thead>                                       \
           <tr>                                      \
-              <th>pattern</th>                      \
-              <th>restriction</th>                  \
-              <th>parameters</th>                   \
+              <th>groups</th>                       \
           </tr>                                     \
       </thead>                                      \
       <tbody>                                       \
-      {{#rules}}                                    \
+      {{#groups}}                                   \
       <tr>                                          \
-          <td>                                      \
-              {{pattern}}                           \
-          </td>                                     \
-          <td>                                      \
-              {{restriction}}                       \
-          </td>                                     \
-          <td>                                      \
-              {{parameters}}                        \
-              <button                               \
-                groupid="{{encodedgroupname}}"      \
-                type="button"                       \
-                class="btn btn-default btn-xs       \
-                      glyphicon glyphicon-remove    \
-                      pull-right invisible"         \
-                      title="delete">               \
-              </button>                             \
-          </td>                                     \
+        <td>                                        \
+          <a href="#groups/{{encodedgroupname}}">   \
+          {{groupname}}                             \
+          </a>                                      \
+        </td>                                       \
       </tr>                                         \
-      {{/rules}}                                    \
+      {{/groups}}                                   \
       <tbody>                                       \
     </table>                                        \
     ';
+
+    var groupMarkup='                                           \
+    <p><b>Hint</b></p>                                          \
+    <pre>                                                       \
+    {{hint}}                                                    \
+    </pre>                                                      \
+    <hr>                                                        \
+    <table class="table table-striped                           \
+                  table-bordered table-hover">                  \
+      <thead>                                                   \
+        <tr>                                                    \
+          <th>pattern</th>                                      \
+          <th>restriction</th>                                  \
+          <th>parameters</th>                                   \
+        </tr>                                                   \
+      </thead>                                                  \
+      <tbody>                                                   \
+      {{#restrictions}}                                         \
+      <tr>                                                      \
+        <td>                                                    \
+          {{pattern}}                                           \
+        </td>                                                   \
+        <td>                                                    \
+          <a href="#restrictions/{{encodedrestrictionname}}">   \
+          {{restrictionname}}                                   \
+          </a>                                                  \
+        </td>                                                   \
+        <td>                                                    \
+          {{parameters}}                                        \
+        </td>                                                   \
+      </tr>                                                     \
+      {{/restrictions}}                                         \
+      <tbody>                                                   \
+    </table>                                                    \
+    ';
+
+    var restrictionMarkup='                         \
+    <p><b>Description</b></p>                       \
+    <pre>                                           \
+    {{description}}                                 \
+    </pre>                                          \
+    ';
+
     return {
       breadcrumbs: breadcrumbs,
       usersMarkup: usersMarkup,
-      groupsMarkup: groupsMarkup
+      groupsMarkup: groupsMarkup,
+      restrictionsMarkup: restrictionsMarkup,
+      userMarkup: userMarkup,
+      groupMarkup: groupMarkup,
+      restrictionMarkup: restrictionMarkup
     }
   }
 );
