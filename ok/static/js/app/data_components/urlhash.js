@@ -15,7 +15,7 @@ define(
         var hash = location.href.split("#")[1] || "";
         var components = hash.split("/");
 
-        this.trigger("dataShouldRenderBreadCrumbs", {components: components});
+        this.trigger("dataHashComponentsReceived", {components: components});
 
         if (components.length == 0 || components.length > 2){
           location.assign("#users");

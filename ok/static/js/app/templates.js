@@ -9,18 +9,18 @@ define(
     </li>                                           \
     {{/path}}';
 
-    var navbar = '                                  \
-    <ul class="nav navbar-nav">                     \
-      <li>                                          \
-        <a href="#users">Users</a>                  \
-      </li>                                         \
-      <li>                                          \
-        <a href="#groups">Groups</a>                \
-      </li>                                         \
-      <li>                                          \
-        <a href="#restrictions">Restrictions</a>    \
-      </li>                                         \
-    </ul>                                           \
+    var navbar = '                                          \
+    <ul class="nav navbar-nav">                             \
+      <li {{#users}}class="active"{{/users}}>               \
+        <a href="#users">Users</a>                          \
+      </li>                                                 \
+      <li {{#groups}}class="active"{{/groups}}>             \
+        <a href="#groups">Groups</a>                        \
+      </li>                                                 \
+      <li {{#restrictions}}class="active"{{/restrictions}}> \
+        <a href="#restrictions">Restrictions</a>            \
+      </li>                                                 \
+    </ul>                                                   \
     ';
 
     var usersDisplay='                              \
@@ -179,7 +179,8 @@ define(
       restrictionsDisplay: restrictionsDisplay,
       userDisplay: userDisplay,
       groupDisplay: groupDisplay,
-      restrictionDisplay: restrictionDisplay
+      restrictionDisplay: restrictionDisplay,
+      navbar: navbar
     }
   }
 );

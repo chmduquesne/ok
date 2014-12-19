@@ -25,7 +25,7 @@ define(
       }
 
       this.after("initialize", function() {
-        this.on("dataShouldRenderBreadCrumbs", this.renderBreadcrumbs);
+        this.on("dataHashComponentsReceived", this.renderBreadcrumbs);
       });
     }
   }
