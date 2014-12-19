@@ -15,13 +15,18 @@ define(
       this.renderUsers = function(ev, data) {
         var params = {"users": []};
         for (var user in data.response){
-          var groupList = []
-          for (var i in data.response[user]){
-            groupname = data.response[user]["groups"][i];
+          var groupList = [];
+          var first = true;
+          for (var i in data.response[user]["groups"]){
+            var groupname = data.response[user]["groups"][i];
             groupList.push({
               "groupname": groupname,
-              "encodedgroupname": encodeURIComponent(groupname)
+              "encodedgroupname": encodeURIComponent(groupname),
+              "first": first
             });
+            if (first){
+              first = false;
+            }
           }
           params.users.push({
             "username": user,
