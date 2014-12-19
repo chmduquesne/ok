@@ -9,6 +9,20 @@ define(
     </li>                                           \
     {{/path}}';
 
+    var navbar = '                                  \
+    <ul class="nav navbar-nav">                     \
+      <li>                                          \
+        <a href="#users">Users</a>                  \
+      </li>                                         \
+      <li>                                          \
+        <a href="#groups">Groups</a>                \
+      </li>                                         \
+      <li>                                          \
+        <a href="#restrictions">Restrictions</a>    \
+      </li>                                         \
+    </ul>                                           \
+    ';
+
     var usersDisplay='                               \
     <table class="table table-striped               \
                   table-bordered table-hover">      \
