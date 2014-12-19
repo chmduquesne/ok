@@ -31,29 +31,31 @@ define(
     <table class="table table-striped               \
                   table-bordered table-hover">      \
       <thead>                                       \
-          <tr>                                      \
-              <th>username</th>                     \
-              <th>groups</th>                       \
-          </tr>                                     \
+        <tr>                                        \
+          <th><input type="checkbox"/></th>         \
+          <th>username</th>                         \
+          <th>groups</th>                           \
+        </tr>                                       \
       </thead>                                      \
       <tbody>                                       \
       {{#users}}                                    \
       <tr>                                          \
-          <td>                                      \
-            <a href="#users/{{encodedusername}}">   \
-              {{username}}                          \
-            </a>                                    \
-          </td>                                     \
-          <td>                                      \
+        <td><input type="checkbox"/></td>           \
+        <td>                                        \
+          <a href="#users/{{encodedusername}}">     \
+          {{username}}                              \
+          </a>                                      \
+        </td>                                       \
+        <td>                                        \
           {{#groups}}                               \
-            {{^first}}                              \
-            ,                                       \
-            {{/first}}                              \
-            <a href="#groups/{{encodedgroupname}}"> \
-            {{groupname}}                           \
-            </a>                                    \
+          {{^first}}                                \
+          ,                                         \
+          {{/first}}                                \
+          <a href="#groups/{{encodedgroupname}}">   \
+          {{groupname}}                             \
+          </a>                                      \
           {{/groups}}                               \
-          </td>                                     \
+        </td>                                       \
       </tr>                                         \
       {{/users}}                                    \
       <tbody>                                       \
@@ -65,20 +67,22 @@ define(
     <table class="table table-striped               \
                   table-bordered table-hover">      \
       <thead>                                       \
-          <tr>                                      \
-              <th>group</th>                        \
-          </tr>                                     \
+        <tr>                                        \
+          <th><input type="checkbox"/></th>         \
+          <th>group</th>                            \
+        </tr>                                       \
       </thead>                                      \
       <tbody>                                       \
-      {{#groups}}                                   \
-      <tr>                                          \
+        {{#groups}}                                 \
+        <tr>                                        \
+          <td><input type="checkbox"/></td>         \
           <td>                                      \
             <a href="#groups/{{encodedgroupname}}"> \
               {{groupname}}                         \
             </a>                                    \
           </td>                                     \
-      </tr>                                         \
-      {{/groups}}                                   \
+        </tr>                                       \
+        {{/groups}}                                 \
       <tbody>                                       \
     </table>                                        \
     ';
