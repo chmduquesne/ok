@@ -23,7 +23,11 @@ define(
     </ul>                                           \
     ';
 
-    var usersDisplay='                               \
+    var usersDisplay='                              \
+    {{^users}}                                      \
+    <p class="text-center">No data</p>              \
+    {{/users}}                                      \
+    {{#users.length}}                               \
     <table class="table table-striped               \
                   table-bordered table-hover">      \
       <thead>                                       \
@@ -54,9 +58,10 @@ define(
       {{/users}}                                    \
       <tbody>                                       \
     </table>                                        \
+    {{/users.length}}                               \
     ';
 
-    var groupsDisplay='                              \
+    var groupsDisplay='                             \
     <table class="table table-striped               \
                   table-bordered table-hover">      \
       <thead>                                       \
@@ -78,7 +83,7 @@ define(
     </table>                                        \
     ';
 
-    var restrictionsDisplay='                                    \
+    var restrictionsDisplay='                                   \
     <table class="table table-striped                           \
                   table-bordered table-hover">                  \
       <thead>                                                   \
@@ -100,7 +105,7 @@ define(
     </table>                                                    \
     ';
 
-    var userDisplay='                                \
+    var userDisplay='                               \
     <table class="table table-striped               \
                   table-bordered table-hover">      \
       <thead>                                       \
@@ -122,12 +127,14 @@ define(
     </table>                                        \
     ';
 
-    var groupDisplay='                                           \
+    var groupDisplay='                                          \
     <p><b>Hint</b></p>                                          \
-    <pre>                                                       \
-    {{hint}}                                                    \
-    </pre>                                                      \
+    <pre>{{hint}}</pre>                                         \
     <hr>                                                        \
+    {{^restrictions.length}}                                    \
+    <p class="text-center">This group allows nothing</p>        \
+    {{/restrictions.length}}                                    \
+    {{#restrictions.length}}                                    \
     <table class="table table-striped                           \
                   table-bordered table-hover">                  \
       <thead>                                                   \
@@ -155,6 +162,7 @@ define(
       {{/restrictions}}                                         \
       <tbody>                                                   \
     </table>                                                    \
+    {{/restrictions.length}}                                    \
     ';
 
     var restrictionDisplay='                         \
