@@ -176,6 +176,36 @@ define(
     </pre>                                                              \
     ';
 
+    var usersEditor='                                                   \
+      <div class="input-group">                                         \
+        <input type="text" class="form-control" placeholder="Filter">   \
+        <span class="input-group-btn">                                  \
+          <button class="btn btn-default disabled" type="button">       \
+            Create                                                      \
+          </button>                                                     \
+        </span>                                                         \
+      </div><!-- /input-group -->                                       \
+      <hr>                                                              \
+    ';
+
+    var groupsEditor='                                                  \
+      <div class="input-group">                                         \
+        <input type="text" class="form-control" placeholder="New group">\
+        <span class="input-group-btn">                                  \
+          <button class="btn btn-default disabled" type="button">       \
+            Create                                                      \
+          </button>                                                     \
+        </span>                                                         \
+      </div><!-- /input-group -->                                       \
+      <hr>                                                              \
+    ';
+
+    var userEditor='';
+
+    var groupEditor='';
+
+    var emptyEditor='';
+
     return {
       breadcrumbs: breadcrumbs,
       usersDisplay: usersDisplay,
@@ -184,7 +214,12 @@ define(
       userDisplay: userDisplay,
       groupDisplay: groupDisplay,
       restrictionDisplay: restrictionDisplay,
-      navbar: navbar
+      navbar: navbar,
+      usersEditor: usersEditor,
+      groupsEditor: groupsEditor,
+      userEditor: userEditor,
+      groupEditor: groupEditor,
+      emptyEditor: emptyEditor
     }
   }
 );

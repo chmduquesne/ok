@@ -35,12 +35,12 @@ define(
       };
 
       this.after("initialize", function() {
-        this.on("dataUsersDisplayRendered", this.onUsersRendered);
-        this.on("dataGroupsDisplayRendered", this.onGroupsRendered);
-        this.on("dataRestrictionsDisplayRendered", this.onRestrictionsRendered);
-        this.on("dataUserDisplayRendered", this.onUserRendered);
-        this.on("dataGroupDisplayRendered", this.onGroupRendered);
-        this.on("dataRestrictionDisplayRendered", this.onRestrictionRendered);
+        this.on("dataUsersEditorRendered", this.onUsersRendered);
+        this.on("dataGroupsEditorRendered", this.onGroupsRendered);
+        this.on("dataRestrictionsEditorRendered", this.onRestrictionsRendered);
+        this.on("dataUserEditorRendered", this.onUserRendered);
+        this.on("dataGroupEditorRendered", this.onGroupRendered);
+        this.on("dataRestrictionEditorRendered", this.onRestrictionRendered);
       });
     }
   }
