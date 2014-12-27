@@ -28,6 +28,9 @@ define(
     <p class="text-center">No data</p>                                  \
     {{/users}}                                                          \
     {{#users.length}}                                                   \
+    <button class="btn btn-default disabled" role="button">             \
+      Delete                                                            \
+    </button>                                                           \
     <table class="table table-striped                                   \
                   table-bordered table-hover">                          \
       <thead>                                                           \
@@ -64,6 +67,9 @@ define(
     ';
 
     var groupsDisplay='                                                 \
+    <button class="btn btn-default disabled" role="button">             \
+      Delete                                                            \
+    </button>                                                           \
     <table class="table table-striped                                   \
                   table-bordered table-hover">                          \
       <thead>                                                           \
@@ -110,22 +116,27 @@ define(
     ';
 
     var userDisplay='                                                   \
+    <button class="btn btn-default disabled" role="button">             \
+      Remove                                                            \
+    </button>                                                           \
     <table class="table table-striped                                   \
                   table-bordered table-hover">                          \
       <thead>                                                           \
           <tr>                                                          \
+              <th class="xxs-col"><input type="checkbox"/></th>         \
               <th>groups</th>                                           \
           </tr>                                                         \
       </thead>                                                          \
       <tbody>                                                           \
       {{#groups}}                                                       \
-      <tr>                                                              \
-        <td>                                                            \
-          <a href="#groups/{{encodedgroupname}}">                       \
-          {{groupname}}                                                 \
-          </a>                                                          \
-        </td>                                                           \
-      </tr>                                                             \
+        <tr>                                                            \
+          <td><input type="checkbox"/></td>                             \
+          <td>                                                          \
+            <a href="#groups/{{encodedgroupname}}">                     \
+            {{groupname}}                                               \
+            </a>                                                        \
+          </td>                                                         \
+        </tr>                                                           \
       {{/groups}}                                                       \
       <tbody>                                                           \
     </table>                                                            \
@@ -139,10 +150,14 @@ define(
     <p class="text-center">This group allows nothing</p>                \
     {{/restrictions.length}}                                            \
     {{#restrictions.length}}                                            \
+    <button class="btn btn-default disabled" role="button">             \
+      Remove                                                            \
+    </button>                                                           \
     <table class="table table-striped                                   \
                   table-bordered table-hover">                          \
       <thead>                                                           \
         <tr>                                                            \
+          <th class="xxs-col"><input type="checkbox"/></th>             \
           <th>pattern</th>                                              \
           <th>restriction</th>                                          \
           <th>parameters</th>                                           \
@@ -151,6 +166,7 @@ define(
       <tbody>                                                           \
       {{#restrictions}}                                                 \
       <tr>                                                              \
+        <td><input type="checkbox"/></td>                               \
         <td>                                                            \
           {{pattern}}                                                   \
         </td>                                                           \
