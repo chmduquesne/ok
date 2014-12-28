@@ -177,7 +177,7 @@ class OkAppTestCase(unittest.TestCase):
         with OkConfig(CUSTOM_RESTRICTION):
             response = self.app.get("/restrictions/")
             body = json.loads(response.data)
-            self.assertIn("myrestriction", body)
+            self.assertIn("myrestriction", body["restrictions"])
 
     def test_import_redefined_restriction(self):
         with self.assertRaises(KeyError):
@@ -195,7 +195,8 @@ class OkAppTestCase(unittest.TestCase):
         response = self.app.get("/users/")
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(body, dict())
+        self.assertEqual(body,
+                {u'page': 1, u'total_pages': 1, u'users':{}})
 
     def test_users_url_unexisting(self):
         response = self.app.get("/users/john")

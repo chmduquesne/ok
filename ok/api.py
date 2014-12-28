@@ -290,24 +290,16 @@ def page(n):
     return n // app.config["MAX_RESULTS"] + 1
 
 
-def search_user(s, p=1):
+def get_users(s="", p=1):
     users_db = get_users_db()
 
-    res = {}
+    res = {"users": {}}
     for n, (username, userdata) in enumerate(users_db.iteritems()):
         if s in username and page(n) == p:
-            res[username] = userdata
-
-    return flask.jsonify(res)
-
-
-def all_users(p=1):
-    users_db = get_users_db()
-
-    res = {}
-    for n, (username, userdata) in enumerate(users_db.iteritems()):
-        if page(n) == p:
-            res[username] = userdata
+            res["users"][username] = userdata
+    res["page"] = p
+    if s == "":
+        res["total_pages"] = page(len(users_db))
 
     return flask.jsonify(res)
 
@@ -402,10 +394,11 @@ def users(username=None):
 
     if flask.request.method == "GET":
         p = requested_page()
+        search = username
         if username is None:
-            return all_users(p)
-        if "as_filter" in flask.request.args:
-            return search_user(username, p)
+            search = ""
+        if username is None or "as_filter" in flask.request.args:
+            return get_users(search, p)
         return get_user(username)
 
     if flask.request.method == "POST":
@@ -423,7 +416,11 @@ def users(username=None):
 def get_all_groups():
     groups_db = get_groups_db()
 
-    return flask.jsonify(groups_db)
+    res = {"groups": {}}
+    for groupname, groupdata in groups_db.iteritems():
+        res["groups"][groupname] = groupdata
+
+    return flask.jsonify(res)
 
 
 def get_group(groupname):
@@ -590,7 +587,10 @@ def restrictions(restrictionname=None):
     GET /restrictions/<restrictionname>
     """
     if restrictionname is None:
-        return flask.jsonify(restrictions_manager.all())
+        res = {"restrictions": {}}
+        for restrictionname, restrictiondata in restrictions_manager.all().iteritems():
+            res["restrictions"][restrictionname] = restrictiondata
+        return flask.jsonify(res)
     else:
         description = restrictions_manager.all().get(restrictionname)
         if description is None:

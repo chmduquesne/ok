@@ -14,11 +14,11 @@ define(
 
       this.renderUsersDisplay = function(ev, data) {
         var params = {"users": []};
-        for (var user in data.response){
+        for (var user in data.response.users){
           var groupList = [];
           var first = true;
-          for (var i in data.response[user]["groups"]){
-            var groupname = data.response[user]["groups"][i];
+          for (var i in data.response.users[user]["groups"]){
+            var groupname = data.response.users[user]["groups"][i];
             groupList.push({
               "groupname": groupname,
               "encodedgroupname": encodeURIComponent(groupname),
@@ -40,7 +40,7 @@ define(
 
       this.renderGroupsDisplay = function(ev, data) {
         var params = {"groups": []};
-        for (var group in data.response){
+        for (var group in data.response.groups){
           params.groups.push({"groupname": group, "encodedgroupname": encodeURIComponent(group)});
         }
         var markup = Mustache.render(templates.groupsDisplay, params);
@@ -49,7 +49,7 @@ define(
 
       this.renderRestrictionsDisplay = function(ev, data){
         var params = {"restrictions": []};
-        for (var restriction in data.response){
+        for (var restriction in data.response.restrictions){
           params.restrictions.push({
             "restrictionname": restriction,
             "encodedrestrictionname": encodeURIComponent(restriction)
