@@ -34,6 +34,24 @@ define(
 
       this.onGroupsRendered = function(ev, data) {
         this.$node.html(data.markup);
+        this.$node
+          .find("#group-add-bar")
+          .on("input propertychange", { launcher: this },
+            function(ev) {
+              var group = $("#group-add-bar").val();
+              ev.data.launcher.trigger("dataShouldCheckIfGroupExists",
+                  {encodedGroupname: encodeURIComponent(group)}
+              );
+            });
+        this.$node
+          .find("#group-create-button")
+          .on("click", { launcher: this },
+            function(ev) {
+              var group = $("#group-add-bar").val();
+              ev.data.launcher.trigger("dataShouldPostGroup",
+                  {encodedGroupname: encodeURIComponent(group)}
+              );
+            });
       };
 
       this.onRestrictionsRendered = function(ev, data){
@@ -61,6 +79,15 @@ define(
         }
       };
 
+      this.onUpdateGroupCreateButton = function(ev, data){
+        if (ev.type == "dataGroupDoesNotExist") {
+          this.$node.find("#group-create-button").removeClass("disabled");
+        }
+        if (ev.type == "dataGroupExists") {
+          this.$node.find("#group-create-button").addClass("disabled");
+        }
+      };
+
       this.after("initialize", function() {
         this.on("dataUsersEditorRendered", this.onUsersRendered);
         this.on("dataGroupsEditorRendered", this.onGroupsRendered);
@@ -70,6 +97,8 @@ define(
         this.on("dataRestrictionEditorRendered", this.onRestrictionRendered);
         this.on(window, "dataUserExists", this.onUpdateUserCreateButton);
         this.on(window, "dataUserDoesNotExist", this.onUpdateUserCreateButton);
+        this.on(window, "dataGroupExists", this.onUpdateGroupCreateButton);
+        this.on(window, "dataGroupDoesNotExist", this.onUpdateGroupCreateButton);
       });
     }
   }

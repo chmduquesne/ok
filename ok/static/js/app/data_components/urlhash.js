@@ -55,6 +55,7 @@ define(
       this.after("initialize", function() {
         this.on("hashchange", this.onHashchange);
         this.on("dataUserCreated", this.onHashchange);
+        this.on("dataGroupCreated", this.onHashchange);
 
         // Trigger the first "hash change"
         this.onHashchange();

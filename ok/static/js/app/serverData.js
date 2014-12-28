@@ -162,6 +162,22 @@ define(
           });
       }
 
+      this.onDataShouldCheckIfGroupExists = function(ev, data){
+        $.ajax("/groups/" + data.encodedGroupname, {
+          type: "GET",
+          dataType: "json",
+          context: this,
+          success: function(response) {
+              this.trigger("dataGroupExists");
+            },
+          statusCode: {
+            404: function(response) {
+                this.trigger("dataGroupDoesNotExist");
+              }
+            }
+          });
+      }
+
       this.after("initialize", function() {
         this.on("dataShouldGetUsers", this.onDataShouldGetUsers);
         this.on("dataShouldGetUser", this.onDataShouldGetUser);
@@ -176,6 +192,7 @@ define(
         this.on("dataShouldGetRestrictions", this.onDataShouldGetRestrictions);
         this.on("dataShouldGetRestriction", this.onDataShouldGetRestriction);
         this.on("dataShouldCheckIfUserExists", this.onDataShouldCheckIfUserExists);
+        this.on("dataShouldCheckIfGroupExists", this.onDataShouldCheckIfGroupExists);
       });
     }
   }

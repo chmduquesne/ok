@@ -241,13 +241,15 @@ define(
 
     var groupsEditor='                                                  \
       <div class="input-group spaced">                                  \
-        <input type="text" class="form-control" placeholder="New group">\
+        <input id="group-add-bar" type="text"                           \
+               class="form-control" placeholder="New group">            \
         <span class="input-group-btn">                                  \
-          <button class="btn btn-default disabled" type="button">       \
+          <button id="group-create-button"                              \
+                  class="btn btn-default disabled" type="button">       \
             Create                                                      \
           </button>                                                     \
         </span>                                                         \
-      </div><!-- /input-group -->                                       \
+      </div>                                                            \
     ';
 
     var userEditor='                                                    \
