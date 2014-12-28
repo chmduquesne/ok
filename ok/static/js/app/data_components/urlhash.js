@@ -53,7 +53,8 @@ define(
       }
 
       this.after("initialize", function() {
-        this.on(window, "hashchange", this.onHashchange);
+        this.on("hashchange", this.onHashchange);
+        this.on("dataUserCreated", this.onHashchange);
 
         // Trigger the first "hash change"
         this.onHashchange();

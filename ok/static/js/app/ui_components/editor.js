@@ -12,6 +12,24 @@ define(
 
       this.onUsersRendered = function(ev, data) {
         this.$node.html(data.markup);
+        this.$node
+          .find("#user-search-bar")
+          .on("input propertychange", { launcher: this },
+            function(ev) {
+              var searchedUser = $("#user-search-bar").val();
+              ev.data.launcher.trigger("dataShouldCheckIfUserExists",
+                  {encodedUsername: encodeURIComponent(searchedUser)}
+              );
+            });
+        this.$node
+          .find("#user-create-button")
+          .on("click", { launcher: this },
+            function(ev) {
+              var username = $("#user-search-bar").val();
+              ev.data.launcher.trigger("dataShouldPostUser",
+                  {encodedUsername: encodeURIComponent(username)}
+              );
+            });
       };
 
       this.onGroupsRendered = function(ev, data) {
@@ -19,19 +37,28 @@ define(
       };
 
       this.onRestrictionsRendered = function(ev, data){
-        this.$node.html(data.markup)
+        this.$node.html(data.markup);
       };
 
       this.onUserRendered = function(ev, data){
-        this.$node.html(data.markup)
+        this.$node.html(data.markup);
       };
 
       this.onGroupRendered = function(ev, data){
-        this.$node.html(data.markup)
+        this.$node.html(data.markup);
       };
 
       this.onRestrictionRendered = function(ev, data){
-        this.$node.html(data.markup)
+        this.$node.html(data.markup);
+      };
+
+      this.onUpdateUserCreateButton = function(ev, data){
+        if (ev.type == "dataUserDoesNotExist") {
+          this.$node.find("#user-create-button").removeClass("disabled");
+        }
+        if (ev.type == "dataUserExists") {
+          this.$node.find("#user-create-button").addClass("disabled");
+        }
       };
 
       this.after("initialize", function() {
@@ -41,6 +68,8 @@ define(
         this.on("dataUserEditorRendered", this.onUserRendered);
         this.on("dataGroupEditorRendered", this.onGroupRendered);
         this.on("dataRestrictionEditorRendered", this.onRestrictionRendered);
+        this.on(window, "dataUserExists", this.onUpdateUserCreateButton);
+        this.on(window, "dataUserDoesNotExist", this.onUpdateUserCreateButton);
       });
     }
   }

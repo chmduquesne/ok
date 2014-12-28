@@ -28,9 +28,18 @@ define(
     <p class="text-center">No data</p>                                  \
     {{/users}}                                                          \
     {{#users.length}}                                                   \
-    <button class="btn btn-default disabled" role="button">             \
-      Delete                                                            \
-    </button>                                                           \
+    <div class="spaced">                                                \
+      <form class="form-inline">                                        \
+        <button class="btn btn-default disabled" role="button">         \
+          Delete                                                        \
+        </button>                                                       \
+        <div class="checkbox">                                          \
+          <input type="checkbox">                                       \
+            All users matching the active filter                        \
+          </input>                                                      \
+        </div>                                                          \
+      </form>                                                           \
+    </div>                                                              \
     <table class="table table-striped                                   \
                   table-bordered table-hover">                          \
       <thead>                                                           \
@@ -63,13 +72,30 @@ define(
       {{/users}}                                                        \
       <tbody>                                                           \
     </table>                                                            \
+    <nav>                                                               \
+      <ul class="pagination">                                           \
+        <li>                                                            \
+          <a href="#" aria-label="Previous">                            \
+            <span aria-hidden="true">&laquo;</span>                     \
+          </a>                                                          \
+        </li>                                                           \
+        <li><a href="#/users/">1</a></li>                               \
+        <li>                                                            \
+          <a href="#" aria-label="Next">                                \
+            <span aria-hidden="true">&raquo;</span>                     \
+          </a>                                                          \
+        </li>                                                           \
+      </ul>                                                             \
+    </nav>                                                              \
     {{/users.length}}                                                   \
     ';
 
     var groupsDisplay='                                                 \
-    <button class="btn btn-default disabled" role="button">             \
-      Delete                                                            \
-    </button>                                                           \
+    <div class="spaced">                                                \
+      <button class="btn btn-default disabled" role="button">           \
+        Delete                                                          \
+      </button>                                                         \
+    </div>                                                              \
     <table class="table table-striped                                   \
                   table-bordered table-hover">                          \
       <thead>                                                           \
@@ -116,9 +142,11 @@ define(
     ';
 
     var userDisplay='                                                   \
-    <button class="btn btn-default disabled" role="button">             \
-      Remove                                                            \
-    </button>                                                           \
+    <div class="spaced">                                                \
+      <button class="btn btn-default disabled" role="button">           \
+        Remove from selected groups                                     \
+      </button>                                                         \
+    </div>                                                              \
     <table class="table table-striped                                   \
                   table-bordered table-hover">                          \
       <thead>                                                           \
@@ -143,24 +171,23 @@ define(
     ';
 
     var groupDisplay='                                                  \
-    <p><b>Hint</b></p>                                                  \
-    <pre>{{hint}}</pre>                                                 \
-    <hr>                                                                \
     {{^restrictions.length}}                                            \
     <p class="text-center">This group allows nothing</p>                \
     {{/restrictions.length}}                                            \
     {{#restrictions.length}}                                            \
-    <button class="btn btn-default disabled" role="button">             \
-      Remove                                                            \
-    </button>                                                           \
+    <div class="spaced">                                                \
+      <button class="btn btn-default disabled" role="button">           \
+        Remove                                                          \
+      </button>                                                         \
+    </div>                                                              \
     <table class="table table-striped                                   \
                   table-bordered table-hover">                          \
       <thead>                                                           \
         <tr>                                                            \
           <th class="xxs-col"><input type="checkbox"/></th>             \
-          <th>pattern</th>                                              \
-          <th>restriction</th>                                          \
-          <th>parameters</th>                                           \
+          <th>Path in the url</th>                                      \
+          <th>Restriction to apply</th>                                 \
+          <th>Parameters of the restriction</th>                        \
         </tr>                                                           \
       </thead>                                                          \
       <tbody>                                                           \
@@ -183,29 +210,37 @@ define(
       <tbody>                                                           \
     </table>                                                            \
     {{/restrictions.length}}                                            \
+    <div class="page-header">                                           \
+      <h3>Json hint returned in case of success</h3>                    \
+    </div>                                                              \
+    <textarea class="form-control spaced">{{hint}}</textarea>           \
+    <button class="btn btn-default disabled" role="button">             \
+      Modify                                                            \
+    </button>                                                           \
     ';
 
     var restrictionDisplay='                                            \
-    <p><b>Description</b></p>                                           \
-    <pre>                                                               \
-    {{description}}                                                     \
-    </pre>                                                              \
+    <div class="page-header">                                           \
+      <h3>Description</h3>                                              \
+    </div>                                                              \
+    <pre>{{description}}</pre>                                          \
     ';
 
     var usersEditor='                                                   \
-      <div class="input-group">                                         \
-        <input type="text" class="form-control" placeholder="Filter">   \
+      <div class="input-group spaced">                                  \
+        <input id="user-search-bar" type="text"                         \
+               class="form-control" placeholder="Filter">               \
         <span class="input-group-btn">                                  \
-          <button class="btn btn-default disabled" type="button">       \
+          <button id="user-create-button"                               \
+                  class="btn btn-default disabled" type="button">       \
             Create                                                      \
           </button>                                                     \
         </span>                                                         \
-      </div><!-- /input-group -->                                       \
-      <hr>                                                              \
+      </div>                                                            \
     ';
 
     var groupsEditor='                                                  \
-      <div class="input-group">                                         \
+      <div class="input-group spaced">                                  \
         <input type="text" class="form-control" placeholder="New group">\
         <span class="input-group-btn">                                  \
           <button class="btn btn-default disabled" type="button">       \
@@ -213,10 +248,23 @@ define(
           </button>                                                     \
         </span>                                                         \
       </div><!-- /input-group -->                                       \
-      <hr>                                                              \
     ';
 
-    var userEditor='';
+    var userEditor='                                                    \
+      <div class="spaced">                                              \
+      <form class="form-inline"                                         \
+      <div class="form-group">                                          \
+        <select class="form-control">                                   \
+          <option>users</option>                                        \
+          <option>unrestricted</option>                                 \
+        </select>                                                       \
+        <button class="btn btn-default" type="button">                  \
+          Add to group                                                  \
+        </button>                                                       \
+      </div>                                                            \
+      </form>                                                           \
+      </div>                                                            \
+    ';
 
     var groupEditor='';
 

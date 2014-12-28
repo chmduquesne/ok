@@ -5,8 +5,11 @@ define(
     "bower_components/flight/lib/component",
   ],
   function(defineComponent){
+
     return defineComponent(serverData);
+
     function serverData(){
+
       this.onDataShouldGetUsers = function(ev, data){
         $.ajax("/users/", {
           type: "GET",
@@ -17,6 +20,7 @@ define(
             }
           });
       }
+
       this.onDataShouldGetUser = function(ev, data){
         $.ajax("/users/" + data.encodedUsername, {
           type: "GET",
@@ -27,6 +31,7 @@ define(
             }
           });
       }
+
       this.onDataShouldPutUser = function(ev, data){
         $.ajax("/users/" + data.encodedUsername, {
           type: "PUT",
@@ -38,6 +43,7 @@ define(
             }
           });
       }
+
       this.onDataShouldPostUser = function(ev, data){
         $.ajax("/users/" + data.encodedUsername, {
           type: "POST",
@@ -49,6 +55,7 @@ define(
             }
           });
       }
+
       this.onDataShouldDeleteUser = function(ev, data){
         $.ajax("/users/" + data.encodedUsername, {
           type: "DELETE",
@@ -59,6 +66,7 @@ define(
             }
           });
       }
+
       this.onDataShouldGetGroups = function(ev, data){
         $.ajax("/groups/", {
           type: "GET",
@@ -69,6 +77,7 @@ define(
             }
           });
       }
+
       this.onDataShouldGetGroup = function(ev, data){
         $.ajax("/groups/" + data.encodedGroupname, {
           type: "GET",
@@ -79,6 +88,7 @@ define(
             }
           });
       }
+
       this.onDataShouldPutGroup = function(ev, data){
         $.ajax("/groups/" + data.encodedGroupname, {
           type: "PUT",
@@ -90,6 +100,7 @@ define(
             }
           });
       }
+
       this.onDataShouldPostGroup = function(ev, data){
         $.ajax("/groups/" + data.encodedGroupname, {
           type: "POST",
@@ -101,6 +112,7 @@ define(
             }
           });
       }
+
       this.onDataShouldDeleteGroup = function(ev, data){
         $.ajax("/groups/" + data.encodedGroupname, {
           type: "DELETE",
@@ -111,6 +123,7 @@ define(
             }
           });
       }
+
       this.onDataShouldGetRestrictions = function(ev, data){
         $.ajax("/restrictions/", {
           type: "GET",
@@ -121,6 +134,7 @@ define(
             }
           });
       }
+
       this.onDataShouldGetRestriction = function(ev, data){
         $.ajax("/restrictions/" + data.encodedRestrictionName, {
           type: "GET",
@@ -128,6 +142,22 @@ define(
           context: this,
           success: function(response) {
               this.trigger("dataRestrictionReceived", {response: response});
+            }
+          });
+      }
+
+      this.onDataShouldCheckIfUserExists = function(ev, data){
+        $.ajax("/users/" + data.encodedUsername, {
+          type: "GET",
+          dataType: "json",
+          context: this,
+          success: function(response) {
+              this.trigger("dataUserExists");
+            },
+          statusCode: {
+            404: function(response) {
+                this.trigger("dataUserDoesNotExist");
+              }
             }
           });
       }
@@ -145,6 +175,7 @@ define(
         this.on("dataShouldDeleteGroup", this.onDataShouldDeleteGroup);
         this.on("dataShouldGetRestrictions", this.onDataShouldGetRestrictions);
         this.on("dataShouldGetRestriction", this.onDataShouldGetRestriction);
+        this.on("dataShouldCheckIfUserExists", this.onDataShouldCheckIfUserExists);
       });
     }
   }
