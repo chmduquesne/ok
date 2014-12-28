@@ -11,7 +11,7 @@ define(
     function serverData(){
 
       this.onDataShouldGetUsers = function(ev, data){
-        $.ajax("/users/", {
+        $.ajax("/users/" + data.search, {
           type: "GET",
           dataType: "json",
           context: this,

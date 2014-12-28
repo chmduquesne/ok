@@ -13,7 +13,7 @@ define(
     function markup(){
 
       this.renderUsersDisplay = function(ev, data) {
-        var params = {"users": []};
+        var params = {"users": [], "pages": {}};
         for (var user in data.response.users){
           var groupList = [];
           var first = true;
@@ -27,6 +27,9 @@ define(
             if (first){
               first = false;
             }
+          }
+          if (data.total_pages) {
+
           }
           params.users.push({
             "username": user,

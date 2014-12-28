@@ -13,7 +13,16 @@ define(
       this.onHashchange = function() {
         // See http://stackoverflow.com/questions/1703552/encoding-of-window-location-hash
         var hash = location.href.split("#")[1] || "";
-        var components = hash.split("/");
+        var helper = document.createElement("a");
+        helper.href = hash;
+        var path = helper.pathname.substring(1);
+        var components = path.split("/");
+        for (var i=components.length-1; i>=0; i--){
+          if (components[i] == ""){
+            components.splice(i, 1);
+          }
+        }
+        var search = helper.search;
 
         this.trigger("dataHashComponentsReceived", {components: components});
 
@@ -23,7 +32,7 @@ define(
         }
         if (components.length == 1) {
           if (components[0] == "users") {
-            this.trigger("dataShouldGetUsers");
+            this.trigger("dataShouldGetUsers", {search: search});
             return;
           }
           if (components[0] == "groups") {

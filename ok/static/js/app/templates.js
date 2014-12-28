@@ -72,21 +72,25 @@ define(
       {{/users}}                                                        \
       <tbody>                                                           \
     </table>                                                            \
+    {{#pages.length}}                                                   \
     <nav>                                                               \
       <ul class="pagination">                                           \
         <li>                                                            \
-          <a href="#" aria-label="Previous">                            \
+          <a href="#/users/?page={{prev_page}}" aria-label="Previous">  \
             <span aria-hidden="true">&laquo;</span>                     \
           </a>                                                          \
         </li>                                                           \
-        <li><a href="#/users/">1</a></li>                               \
+        {{#pages}}                                                      \
+        <li><a href="#/users/?page={{page}}">{{page}}</a></li>          \
+        {{/pages}}                                                      \
         <li>                                                            \
-          <a href="#" aria-label="Next">                                \
+          <a href="#/users/?page={{next_page}}" aria-label="Next">      \
             <span aria-hidden="true">&raquo;</span>                     \
           </a>                                                          \
         </li>                                                           \
       </ul>                                                             \
     </nav>                                                              \
+    {{/pages.length}}                                                   \
     {{/users.length}}                                                   \
     ';
 
