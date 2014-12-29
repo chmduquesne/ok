@@ -34,7 +34,7 @@ define(
           Delete                                                        \
         </button>                                                       \
         <div class="checkbox">                                          \
-          <input type="checkbox">                                       \
+          <input id="from-filter" type="checkbox">                      \
             All users matching the active filter                        \
           </input>                                                      \
         </div>                                                          \
@@ -44,7 +44,9 @@ define(
                   table-bordered table-hover">                          \
       <thead>                                                           \
         <tr>                                                            \
-          <th class="xxs-col"><input type="checkbox"/></th>             \
+          <th class="xxs-col">                                          \
+            <input id="all-checkboxes" type="checkbox"/>                \
+            </th>                                                       \
           <th>username</th>                                             \
           <th>groups</th>                                               \
         </tr>                                                           \
@@ -52,7 +54,7 @@ define(
       <tbody>                                                           \
       {{#users}}                                                        \
       <tr>                                                              \
-        <td><input type="checkbox"/></td>                               \
+        <td><input type="checkbox" username="{{encodedusername}}"/></td>\
         <td>                                                            \
           <a href="#users/{{encodedusername}}">                         \
           {{username}}                                                  \
@@ -104,14 +106,18 @@ define(
                   table-bordered table-hover">                          \
       <thead>                                                           \
         <tr>                                                            \
-          <th class="xxs-col"><input type="checkbox"/></th>             \
+          <th class="xxs-col">                                          \
+            <input id="all-checkboxes" type="checkbox"/>                \
+          </th>                                                         \
           <th>group</th>                                                \
         </tr>                                                           \
       </thead>                                                          \
       <tbody>                                                           \
         {{#groups}}                                                     \
         <tr>                                                            \
-          <td><input type="checkbox"/></td>                             \
+          <td>                                                          \
+            <input type="checkbox" groupname={{encodedgroupname}}/>     \
+          </td>                                                         \
           <td>                                                          \
             <a href="#groups/{{encodedgroupname}}">                     \
               {{groupname}}                                             \
