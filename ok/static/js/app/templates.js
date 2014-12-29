@@ -78,16 +78,38 @@ define(
     <nav>                                                               \
       <ul class="pagination">                                           \
         <li>                                                            \
+          <a href="#/users/?page={{first_page}}" aria-label="First">    \
+            <span class="glyphicon glyphicon-fast-backward"             \
+                  aria-hidden="true">                                   \
+            </span>                                                     \
+          </a>                                                          \
+        </li>                                                           \
+        <li>                                                            \
           <a href="#/users/?page={{prev_page}}" aria-label="Previous">  \
-            <span aria-hidden="true">&laquo;</span>                     \
+            <span class="glyphicon glyphicon-step-backward"             \
+                  aria-hidden="true">                                   \
+            </span>                                                     \
           </a>                                                          \
         </li>                                                           \
         {{#pages}}                                                      \
-        <li><a href="#/users/?page={{page}}">{{page}}</a></li>          \
+        <li                                                             \
+          {{#active}}class="active"{{/active}}                          \
+          >                                                             \
+          <a href="#/users/?page={{page}}">{{page}}</a>                 \
+        </li>                                                           \
         {{/pages}}                                                      \
         <li>                                                            \
           <a href="#/users/?page={{next_page}}" aria-label="Next">      \
-            <span aria-hidden="true">&raquo;</span>                     \
+            <span class="glyphicon glyphicon-step-forward"              \
+                  aria-hidden="true">                                   \
+            </span>                                                     \
+          </a>                                                          \
+        </li>                                                           \
+        <li>                                                            \
+          <a href="#/users/?page={{last_page}}" aria-label="Last">      \
+            <span class="glyphicon glyphicon-fast-forward"              \
+                  aria-hidden="true">                                   \
+            </span>                                                     \
           </a>                                                          \
         </li>                                                           \
       </ul>                                                             \
@@ -187,7 +209,7 @@ define(
     {{#restrictions.length}}                                            \
     <div class="spaced">                                                \
       <button class="btn btn-default disabled" role="button">           \
-        Remove                                                          \
+        Remove selected restrictions                                    \
       </button>                                                         \
     </div>                                                              \
     <table class="table table-striped                                   \
@@ -263,22 +285,44 @@ define(
     ';
 
     var userEditor='                                                    \
-      <div class="spaced">                                              \
-      <form class="form-inline"                                         \
-      <div class="form-group">                                          \
-        <select class="form-control">                                   \
-          <option>users</option>                                        \
-          <option>unrestricted</option>                                 \
-        </select>                                                       \
-        <button class="btn btn-default" type="button">                  \
-          Add to group                                                  \
-        </button>                                                       \
-      </div>                                                            \
+      <form class="form-inline spaced">                                 \
+        <div class="form-group">                                        \
+          <select class="form-control">                                 \
+            <option>users</option>                                      \
+            <option>unrestricted</option>                               \
+          </select>                                                     \
+          <button class="btn btn-default" type="button">                \
+            Add in group                                                \
+          </button>                                                     \
+        </div>                                                          \
       </form>                                                           \
-      </div>                                                            \
     ';
 
-    var groupEditor='';
+    var groupEditor='                                                   \
+      <div class="spaced"> \
+        <form>                                        \
+          <div class="form-group">                                          \
+            <input id="pattern" type="text"                           \
+                   class="form-control" placeholder="path pattern">            \
+          </div>                                                            \
+          <div class="form-group">                                          \
+            <select class="form-control">                                   \
+              <option>users</option>                                        \
+              <option>unrestricted</option>                                 \
+            </select>                                                       \
+          </div>                                                            \
+          <div class="form-group">                                          \
+            <input id="pattern" type="text"                           \
+                   class="form-control" placeholder="restriction parameters">            \
+          </div> \
+          <div class="form-group">                                          \
+              <button class="btn btn-default" type="button">                \
+                Add restriction                                                \
+              </button>                                                     \
+          </div> \
+        </form>                                                           \
+      </div> \
+      ';
 
     var emptyEditor='';
 
