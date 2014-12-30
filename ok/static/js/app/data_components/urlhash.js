@@ -27,20 +27,10 @@ define(
           }
         }
 
-        // If one of the query parameters is as_filter, then remove the
-        // last component since it is part of the search
-        var search = route.search;
-        var as_filter = false;
-        var search_components = (search.split("?")[1] || "").split("&");
-        for (var i in search_components){
-          var items = search_components[i].split("=");
-          if (items[0] == "as_filter"){
-            as_filter = true;
-          }
-        }
-        if (as_filter){
-          search = components[components.length - 1] + search;
-          components.splice(components.length - 1, 1);
+        var search = route.search
+        if (search && components.length == 2){
+          search = components[1] + search;
+          components.splice(1, 1);
         }
 
         this.trigger("dataHashComponentsReceived", {components: components});

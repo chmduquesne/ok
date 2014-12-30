@@ -26,6 +26,14 @@ define(
               /*TODO: check all slaves*/
               $(".user-select");
             });
+        this.$node
+          .find("#delete-user-button")
+          .on("click", { launcher: this },
+            function(ev) {
+              /*TODO: check all slaves*/
+              $(".user-select");
+              //ev.data.launcher.trigger("");
+            });
       };
 
       this.onGroupsRendered = function(ev, data) {

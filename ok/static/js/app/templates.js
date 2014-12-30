@@ -83,14 +83,16 @@ define(
     <nav>                                                               \
       <ul class="pagination">                                           \
         <li>                                                            \
-          <a href="#/users/?page={{first_page}}" aria-label="First">    \
+          <a href="#/users/{{search}}?page={{first_page}}"              \
+             aria-label="First">                                        \
             <span class="glyphicon glyphicon-fast-backward"             \
                   aria-hidden="true">                                   \
             </span>                                                     \
           </a>                                                          \
         </li>                                                           \
         <li>                                                            \
-          <a href="#/users/?page={{prev_page}}" aria-label="Previous">  \
+          <a href="#/users/{{search}}?page={{prev_page}}"               \
+             aria-label="Previous">                                     \
             <span class="glyphicon glyphicon-step-backward"             \
                   aria-hidden="true">                                   \
             </span>                                                     \
@@ -100,18 +102,20 @@ define(
         <li                                                             \
           {{#active}}class="active"{{/active}}                          \
           >                                                             \
-          <a href="#/users/?page={{page}}">{{page}}</a>                 \
+          <a href="#/users/{{search}}?page={{page}}">{{page}}</a>       \
         </li>                                                           \
         {{/pages}}                                                      \
         <li>                                                            \
-          <a href="#/users/?page={{next_page}}" aria-label="Next">      \
+          <a href="#/users/{{search}}?page={{next_page}}"               \
+             aria-label="Next">                                         \
             <span class="glyphicon glyphicon-step-forward"              \
                   aria-hidden="true">                                   \
             </span>                                                     \
           </a>                                                          \
         </li>                                                           \
         <li>                                                            \
-          <a href="#/users/?page={{last_page}}" aria-label="Last">      \
+          <a href="#/users/{{search}}?page={{last_page}}"               \
+             aria-label="Last">                                         \
             <span class="glyphicon glyphicon-fast-forward"              \
                   aria-hidden="true">                                   \
             </span>                                                     \

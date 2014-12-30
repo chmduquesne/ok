@@ -196,7 +196,8 @@ class OkAppTestCase(unittest.TestCase):
         body = json.loads(response.data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(body,
-                {u'page': 1, u'total_pages': 1, u'users':{}})
+                {u'total_pages': 1, u'more_results': False, u'page': 1,
+                    u'users': {}})
 
     def test_users_url_unexisting(self):
         response = self.app.get("/users/john")

@@ -13,7 +13,10 @@ define(
     function markup(){
 
       this.renderUsersDisplay = function(ev, data) {
-        var params = {"users": [], "pages": []};
+        var params = {"users": [], "pages": [], "search": ""};
+        if (data.search){
+          params.search = data.search;
+        }
         for (var user in data.response.users){
           var groupList = [];
           var first = true;
@@ -34,29 +37,34 @@ define(
             "groups": groupList
           });
         }
-        if (data.response.total_pages) {
-          var p = data.response.page;
-          var n = data.response.total_pages;
-          params.first_page = 1;
-          params.last_page = n;
-          params.prev_page = Math.max(1, p - 1);
-          params.next_page = Math.min(n, p + 1);
-          var start = Math.max(1, p - 5);
-          var stop = Math.min(n, p + 5);
-          if (start > p - 5){
-            stop = Math.min(n, stop + start - (p - 5));
-          }
-          if (stop < p + 5){
-            start = Math.max(1, start - (p + 5 - stop));
-          }
-          for (var i = start; i <= stop; i++){
-            var page = {"page": i}
-            if (i == p){
-              page.active = true;
-            }
-            params.pages.push(page);
-          }
+        var p = data.response.page;
+        var n = p;
+        if (data.response.more_results) {
+          n = p + 1;
         }
+        if (data.response.total_pages) {
+          n = data.response.total_pages;
+        }
+        params.first_page = 1;
+        params.last_page = n;
+        params.prev_page = Math.max(1, p - 1);
+        params.next_page = Math.min(n, p + 1);
+        var start = Math.max(1, p - 5);
+        var stop = Math.min(n, p + 5);
+        if (start > p - 5){
+          stop = Math.min(n, stop + start - (p - 5));
+        }
+        if (stop < p + 5){
+          start = Math.max(1, start - (p + 5 - stop));
+        }
+        for (var i = start; i <= stop; i++){
+          var page = {"page": i}
+          if (i == p){
+            page.active = true;
+          }
+          params.pages.push(page);
+        }
+        console.log(params);
         var markup = Mustache.render(templates.usersDisplay, params);
         this.trigger("#display", "dataUsersDisplayRendered", {markup: markup});
       }

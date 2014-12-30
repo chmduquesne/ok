@@ -163,13 +163,14 @@ define(
       }
 
       this.onDataShouldSearchUsers = function(ev, data){
-        console.log("/users/" + data.search + "?as_filter=1");
-        $.ajax("/users/" + data.search + "?as_filter=1", {
+        console.log("/users/" + data.search + "?page=1");
+        $.ajax("/users/" + data.search + "?page=1", {
           type: "GET",
           dataType: "json",
           context: this,
           success: function(response) {
-              this.trigger("dataSearchedUsersReceived", {response: response});
+            this.trigger("dataSearchedUsersReceived",
+              {response: response, search: data.search});
             }
           });
       }

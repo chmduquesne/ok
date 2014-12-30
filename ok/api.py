@@ -294,12 +294,15 @@ def page(n):
 def get_users(s="", p=1):
     users_db = get_users_db()
 
-    res = {"users": {}}
+    res = {"users": {}, "more_results": False}
     search_func = lambda x: s in x[0]
     for n, (username, userdata) in enumerate(
             itertools.ifilter(search_func, users_db.iteritems())):
         if page(n) == p:
             res["users"][username] = userdata
+        if page(n) > p:
+            res["more_results"] = True
+            break
     res["page"] = p
     if s == "":
         res["total_pages"] = page(len(users_db))
@@ -377,7 +380,7 @@ def users(username=None):
     How to query:
     GET /users/
     GET /users/?page=2
-    GET /users/bob?as_filter=1
+    GET /users/bob?page=1
     GET /users/<username>
     POST /users/<username>
     PUT /users/<username>
@@ -400,7 +403,7 @@ def users(username=None):
         search = username
         if username is None:
             search = ""
-        if username is None or "as_filter" in flask.request.args:
+        if username is None or "page" in flask.request.args:
             return get_users(search, p)
         return get_user(username)
 
