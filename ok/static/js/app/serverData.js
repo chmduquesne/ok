@@ -162,6 +162,18 @@ define(
           });
       }
 
+      this.onDataShouldSearchUsers = function(ev, data){
+        console.log("/users/" + data.search + "?as_filter=1");
+        $.ajax("/users/" + data.search + "?as_filter=1", {
+          type: "GET",
+          dataType: "json",
+          context: this,
+          success: function(response) {
+              this.trigger("dataSearchedUsersReceived", {response: response});
+            }
+          });
+      }
+
       this.onDataShouldCheckIfGroupExists = function(ev, data){
         $.ajax("/groups/" + data.encodedGroupname, {
           type: "GET",
@@ -192,6 +204,7 @@ define(
         this.on("dataShouldGetRestrictions", this.onDataShouldGetRestrictions);
         this.on("dataShouldGetRestriction", this.onDataShouldGetRestriction);
         this.on("dataShouldCheckIfUserExists", this.onDataShouldCheckIfUserExists);
+        this.on("dataShouldSearchUsers", this.onDataShouldSearchUsers);
         this.on("dataShouldCheckIfGroupExists", this.onDataShouldCheckIfGroupExists);
       });
     }

@@ -12,6 +12,20 @@ define(
 
       this.onUsersRendered = function(ev, data) {
         this.$node.html(data.markup);
+        this.$node
+          .find("#select-all-checkbox")
+          .on("input propertychange", { launcher: this },
+            function(ev) {
+              /*TODO: check all slaves*/
+              $(".user-select");
+            });
+        this.$node
+          .find("#select-from-filter-checkbox")
+          .on("input propertychange", { launcher: this },
+            function(ev) {
+              /*TODO: check all slaves*/
+              $(".user-select");
+            });
       };
 
       this.onGroupsRendered = function(ev, data) {

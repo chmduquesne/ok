@@ -118,6 +118,7 @@ define(
 
       this.after("initialize", function() {
         this.on("dataUsersReceived", this.renderUsersDisplay);
+        this.on("dataSearchedUsersReceived", this.renderUsersDisplay);
         this.on("dataGroupsReceived", this.renderGroupsDisplay);
         this.on("dataRestrictionsReceived", this.renderRestrictionsDisplay);
         this.on("dataUserReceived", this.renderUserDisplay);

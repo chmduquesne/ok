@@ -18,8 +18,9 @@ define(
             function(ev) {
               var searchedUser = $("#user-search-bar").val();
               ev.data.launcher.trigger("dataShouldCheckIfUserExists",
-                  {encodedUsername: encodeURIComponent(searchedUser)}
-              );
+                  {encodedUsername: encodeURIComponent(searchedUser)});
+              ev.data.launcher.trigger("dataShouldSearchUsers",
+                  {search: encodeURIComponent(searchedUser)});
             });
         this.$node
           .find("#user-create-button")

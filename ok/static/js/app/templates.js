@@ -30,11 +30,13 @@ define(
     {{#users.length}}                                                   \
     <div class="spaced">                                                \
       <form class="form-inline">                                        \
-        <button class="btn btn-default disabled" role="button">         \
+        <button id="delete-user-button"                                 \
+          class="btn btn-default disabled"                              \
+          role="button">                                                \
           Delete                                                        \
         </button>                                                       \
         <div class="checkbox">                                          \
-          <input id="from-filter" type="checkbox">                      \
+          <input id="select-from-filter-checkbox" type="checkbox">      \
             All users matching the active filter                        \
           </input>                                                      \
         </div>                                                          \
@@ -45,7 +47,7 @@ define(
       <thead>                                                           \
         <tr>                                                            \
           <th class="xxs-col">                                          \
-            <input id="all-checkboxes" type="checkbox"/>                \
+            <input id="select-all-checkbox" type="checkbox"/>           \
             </th>                                                       \
           <th>username</th>                                             \
           <th>groups</th>                                               \
@@ -54,7 +56,10 @@ define(
       <tbody>                                                           \
       {{#users}}                                                        \
       <tr>                                                              \
-        <td><input type="checkbox" username="{{encodedusername}}"/></td>\
+        <td>                                                            \
+          <input type="checkbox" class="user-select"                    \
+                 username="{{encodedusername}}"/>                       \
+        </td>                                                           \
         <td>                                                            \
           <a href="#users/{{encodedusername}}">                         \
           {{username}}                                                  \
