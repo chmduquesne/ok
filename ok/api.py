@@ -11,6 +11,7 @@ import json
 import re
 import serializeddicts
 import werkzeug.datastructures
+import itertools
 
 from restrictions import restrictions_manager
 from ok import app
@@ -245,7 +246,7 @@ def ok():
     # We process it through the restrictions of each group
 
     match_found = False
-    for groupname in filter(lambda g: g in groups_db, group_list):
+    for groupname in itertools.ifilter(lambda g: g in groups_db, group_list):
         restriction_list = groups_db[groupname]["restrictions"]
         for path_pattern, restrictionname, restriction_params \
                 in restriction_list:
@@ -294,8 +295,10 @@ def get_users(s="", p=1):
     users_db = get_users_db()
 
     res = {"users": {}}
-    for n, (username, userdata) in enumerate(users_db.iteritems()):
-        if s in username and page(n) == p:
+    search_func = lambda x: s in x[0]
+    for n, (username, userdata) in enumerate(
+            itertools.ifilter(search_func, users_db.iteritems())):
+        if page(n) == p:
             res["users"][username] = userdata
     res["page"] = p
     if s == "":
