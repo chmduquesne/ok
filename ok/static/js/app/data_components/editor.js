@@ -15,7 +15,7 @@ define(
       this.renderUsersEditor = function(ev, data) {
         var params = null;
         var markup = Mustache.render(templates.usersEditor, params);
-        this.trigger("#editor", "dataUsersEditorRendered", {markup: markup});
+        this.trigger("#editor", "dataUsersEditorRendered", {markup: markup, search: data.search});
       }
 
       this.renderGroupsEditor = function(ev, data) {

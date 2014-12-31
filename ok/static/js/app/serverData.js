@@ -11,12 +11,13 @@ define(
     function serverData(){
 
       this.onDataShouldGetUsers = function(ev, data){
-        $.ajax("/users/" + data.search, {
+        $.ajax("/users/" + data.search + data.page, {
           type: "GET",
           dataType: "json",
           context: this,
           success: function(response) {
-              this.trigger("dataUsersReceived", {response: response});
+              this.trigger("dataUsersReceived",
+                  {response: response, search: data.search});
             }
           });
       }

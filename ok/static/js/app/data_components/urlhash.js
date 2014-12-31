@@ -27,9 +27,10 @@ define(
           }
         }
 
-        var search = route.search
-        if (search && components.length == 2){
-          search = components[1] + search;
+        var page = route.search;
+        var search = "";
+        if (page && components.length == 2){
+          search = components[1];
           components.splice(1, 1);
         }
 
@@ -41,7 +42,7 @@ define(
         }
         if (components.length == 1) {
           if (components[0] == "users") {
-            this.trigger("dataShouldGetUsers", {search: search});
+            this.trigger("dataShouldGetUsers", {search: search, page: page});
             return;
           }
           if (components[0] == "groups") {

@@ -14,6 +14,9 @@ define(
         this.$node.html(data.markup);
         this.$node
           .find("#user-search-bar")
+          .val(decodeURIComponent(data.search));
+        this.$node
+          .find("#user-search-bar")
           .on("input propertychange", { launcher: this },
             function(ev) {
               var searchedUser = $("#user-search-bar").val();
