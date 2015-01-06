@@ -296,41 +296,41 @@ define(
     var userEditor='                                                    \
       <form class="form-inline spaced">                                 \
         <div class="form-group">                                        \
+          <button class="btn btn-default" type="button">                \
+            Add in group                                                \
+          </button>                                                     \
           <select class="form-control">                                 \
             <option>users</option>                                      \
             <option>unrestricted</option>                               \
           </select>                                                     \
-          <button class="btn btn-default" type="button">                \
-            Add in group                                                \
-          </button>                                                     \
         </div>                                                          \
       </form>                                                           \
     ';
 
     var groupEditor='                                                   \
-      <div class="spaced"> \
-        <form>                                        \
-          <div class="form-group">                                          \
-            <input id="pattern" type="text"                           \
-                   class="form-control" placeholder="path pattern">            \
-          </div>                                                            \
-          <div class="form-group">                                          \
-            <select class="form-control">                                   \
-              <option>users</option>                                        \
-              <option>unrestricted</option>                                 \
-            </select>                                                       \
-          </div>                                                            \
-          <div class="form-group">                                          \
-            <input id="pattern" type="text"                           \
-                   class="form-control" placeholder="restriction parameters">            \
-          </div> \
-          <div class="form-group">                                          \
-              <button class="btn btn-default" type="button">                \
-                Add restriction                                                \
-              </button>                                                     \
-          </div> \
-        </form>                                                           \
-      </div> \
+      <form class="form-inline spaced">                                 \
+        <form>                                                          \
+          <div class="form-group">                                      \
+              <button class="btn btn-default" type="button">            \
+                Add restriction                                         \
+              </button>                                                 \
+          </div>                                                        \
+          <div class="form-group">                                      \
+            <input id="pattern" type="text"                             \
+                   class="form-control" placeholder="path pattern">     \
+          </div>                                                        \
+          <div class="form-group">                                      \
+            <select class="form-control">                               \
+              <option>unrestricted</option>                             \
+              <option>sudoers</option>                                  \
+            </select>                                                   \
+          <div class="form-group">                                      \
+            <input id="pattern" type="text"                             \
+                   class="form-control" placeholder="parameters">       \
+          </div>                                                        \
+          </div>                                                        \
+        </form>                                                         \
+      </form>                                                           \
       ';
 
     var emptyEditor='';
