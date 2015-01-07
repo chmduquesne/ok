@@ -64,6 +64,36 @@ def restricted_ingredient(groupname, http_scheme, http_netloc, http_path,
     return True
 """
 
+ADVANCED_RESTRICTIONS_CUSTOM_HINT="""
+from ok.restrictions import restrictions_manager
+
+def describer(description):
+    return dict(((key, True) for key in description))
+
+DESCRIBER=describer
+
+categories = {
+    "fruits": ["banana", "apple"],
+    "vegetables": ["eggplant"]
+    }
+
+@restrictions_manager.register(takes_extra_param=True)
+def restricted_ingredient(groupname, http_scheme, http_netloc, http_path,
+        http_query, http_fragment, http_username, http_password,
+        http_hostname, http_port, http_method, http_data,
+        restriction_params):
+    \"\"\"
+    Restrict the ingredient argument to a given category
+    \"\"\"
+
+    category = restriction_params
+
+    if "ingredient" in http_query:
+        return http_query["ingredient"] in categories[category]
+
+    return True
+"""
+
 ##
 # Helpers
 ##
@@ -95,7 +125,8 @@ class OkConfig:
                 USERS_DB=ok.app.config["USERS_DB"],
                 GROUPS_DB=ok.app.config["GROUPS_DB"],
                 AUTO_CREATE=ok.app.config["AUTO_CREATE"],
-                DEFAULT_GROUPS=ok.app.config["DEFAULT_GROUPS"]
+                DEFAULT_GROUPS=ok.app.config["DEFAULT_GROUPS"],
+                DESCRIBER=ok.app.config["DESCRIBER"]
                 )
         self.saved_restrictions = \
                 ok.restrictions.restrictions_manager.func_map.keys()
@@ -344,8 +375,7 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEquals(response.status_code, 201)
         response = self.app.get("/groups/emptygroup")
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(json.loads(response.data), {"hint": True,
-            "restrictions": []})
+        self.assertEquals(json.loads(response.data), {"restrictions": []})
 
     def test_groups_url_post_group_twice(self):
         response = self.app.get("/groups/mygroup")
@@ -387,8 +417,7 @@ class OkAppTestCase(unittest.TestCase):
         self.assertEquals(response.status_code, 201)
         response = self.app.get("/groups/mygroup")
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(json.loads(response.data),
-                {"hint": True, "restrictions": []})
+        self.assertEquals(json.loads(response.data), {"restrictions": []})
         myrestrictions = [["/foo", "unrestricted", None],
                           ["/bar", "unrestricted", None]]
 
@@ -472,6 +501,53 @@ class OkAppTestCase(unittest.TestCase):
                     urlencode("/recipes?ingredient=apple") +
                     "&user=john")
             self.assertEqual(response.status_code, 200)
+
+    def test_ok_url_hint(self):
+        with OkConfig(ADVANCED_RESTRICTIONS):
+            myrestrictions = [
+                        ["/recipes", "http_methods", ["GET"]],
+                        ["/recipes", "restricted_ingredient", "fruits"]
+                        ]
+            response = self.app.post("/groups/fruitlovers",
+                    data={"restrictions": json.dumps(myrestrictions)}
+                    )
+            self.assertEqual(response.status_code, 201)
+            response = self.app.post("/users/john",
+                    data={"groups": "fruitlovers"}
+                    )
+            self.assertEqual(response.status_code, 201)
+            response = self.app.get("/ok/?url=" +
+                    urlencode("/recipes?ingredient=apple") +
+                    "&user=john")
+            self.assertEqual(response.status_code, 200)
+            body = json.loads(response.data)
+            self.assertEqual(body,
+                    {
+                        u'fruitlovers':
+                        [[u'/recipes', u'http_methods', [u'GET']],
+                         [u'/recipes', u'restricted_ingredient', u'fruits']]
+                    })
+
+    def test_ok_url_custom_hint(self):
+        with OkConfig(ADVANCED_RESTRICTIONS_CUSTOM_HINT):
+            myrestrictions = [
+                        ["/recipes", "http_methods", ["GET"]],
+                        ["/recipes", "restricted_ingredient", "fruits"]
+                        ]
+            response = self.app.post("/groups/fruitlovers",
+                    data={"restrictions": json.dumps(myrestrictions)}
+                    )
+            self.assertEqual(response.status_code, 201)
+            response = self.app.post("/users/john",
+                    data={"groups": "fruitlovers"}
+                    )
+            self.assertEqual(response.status_code, 201)
+            response = self.app.get("/ok/?url=" +
+                    urlencode("/recipes?ingredient=apple") +
+                    "&user=john")
+            self.assertEqual(response.status_code, 200)
+            body = json.loads(response.data)
+            self.assertEqual(body, {u'fruitlovers': True})
 
     def test_ok_url_advanced_restrictions_weird_username(self):
         with OkConfig(ADVANCED_RESTRICTIONS):

@@ -26,7 +26,8 @@ app.config.update(dict(
     AUTO_CREATE=True,
     DEFAULT_GROUPS=["users"],
     ANONYMOUS_GROUPS=["anonymous"],
-    MAX_RESULTS=20
+    MAX_RESULTS=20,
+    DESCRIBER=lambda x: x
     ))
 
 
@@ -70,15 +71,14 @@ def get_groups_db():
     if not hasattr(flask.g, "groups_db"):
         groups_db = serializeddicts.JsonDict(app.config["GROUPS_DB"])
         groups_db["unrestricted"] = {
-            "hint": True,
             "restrictions": [[".*", "unrestricted", None]]
             }
         for groupname in app.config["DEFAULT_GROUPS"]:
             if groupname not in groups_db:
-                groups_db[groupname] = {"hint": True, "restrictions": []}
+                groups_db[groupname] = {"restrictions": []}
         for groupname in app.config["ANONYMOUS_GROUPS"]:
             if groupname not in groups_db:
-                groups_db[groupname] = {"hint": True, "restrictions": []}
+                groups_db[groupname] = {"restrictions": []}
         flask.g.groups_db = groups_db
     return flask.g.groups_db
 
@@ -122,12 +122,15 @@ def json_response(status, body={}):
 
 def describe(group_list):
     """
-    Describes the groups with their hints (will raise an exception if the
-    groups database in not correct)
+    Describes the groups
     """
     groups_db = get_groups_db()
-    return dict(((groupname, groups_db[groupname]["hint"])
-                for groupname in group_list))
+
+    description = dict()
+    for groupname in group_list:
+        restrictions = groups_db[groupname]["restrictions"]
+        description[groupname] = restrictions
+    return app.config["DESCRIBER"](description)
 
 
 def parse_qs(qs, keep_blank_values=False, strict_parsing=False):
@@ -449,17 +452,6 @@ def form_input_restriction_list(groupname):
     return res
 
 
-def form_input_hint(groupname):
-    groups_db = get_groups_db()
-
-    res = True
-    if groupname in groups_db:
-        res = groups_db[groupname]["hint"]
-    if "hint" in flask.request.form:
-        res = json.loads(flask.request.form["hint"])
-    return res
-
-
 def check_restriction_list(restriction_list):
     for rule in restriction_list:
         if not isinstance(rule, list):
@@ -475,14 +467,13 @@ def check_restriction_list(restriction_list):
     return True
 
 
-def post_group(groupname, hint=True, restriction_list=[]):
+def post_group(groupname, restriction_list=[]):
     groups_db = get_groups_db()
 
     if groupname in groups_db:
         return json_response(400, "%s: group already exists")
 
     groups_db[groupname] = {
-        "hint": hint,
         "restrictions": restriction_list
         }
     return json_response(
@@ -490,14 +481,13 @@ def post_group(groupname, hint=True, restriction_list=[]):
         )
 
 
-def put_group(groupname, hint=True, restriction_list=[]):
+def put_group(groupname, restriction_list=[]):
     groups_db = get_groups_db()
 
     if groupname not in groups_db:
         return json_response(404, "%s: unknown group")
 
     groups_db[groupname] = {
-        "hint": hint,
         "restrictions": restriction_list
         }
 
@@ -537,7 +527,6 @@ def groups(groupname=None):
     Data Model:
     groups = {
         groupname1: {
-            "hint" : <json to forward to the webservice in case of success>,
             "restrictions": [
                 ["path_pattern1", "restrictionname1", parameters1],
                 ["path_pattern2", "restrictionname2", parameters2],
@@ -545,7 +534,6 @@ def groups(groupname=None):
             ]
         },
         groupname2: {
-            "hint" : <json to forward to the webservice in case of success>,
             "restrictions": [
                 ["path_pattern1", "restrictionname1", parameters1],
                 ["path_pattern2", "restrictionname2", parameters2],
@@ -563,19 +551,17 @@ def groups(groupname=None):
 
     if flask.request.method == "POST":
         restriction_list = form_input_restriction_list(groupname)
-        hint = form_input_hint(groupname)
         if not check_restriction_list(restriction_list):
             return json_response(400, "%s: invalid restrictions" %
                     restriction_list)
-        return post_group(groupname, hint, restriction_list)
+        return post_group(groupname, restriction_list)
 
     if flask.request.method == "PUT":
         restriction_list = form_input_restriction_list(groupname)
-        hint = form_input_hint(groupname)
         if not check_restriction_list(restriction_list):
             return json_response(400, "%s: invalid restrictions" %
                     restriction_list)
-        return put_group(groupname, hint, restriction_list)
+        return put_group(groupname, restriction_list)
 
     if flask.request.method == "DELETE":
         return delete_group(groupname)
