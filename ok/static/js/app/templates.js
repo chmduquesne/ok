@@ -183,11 +183,6 @@ define(
     ';
 
     var userDisplay='                                                   \
-    <div class="spaced">                                                \
-      <button class="btn btn-default disabled" role="button">           \
-        Remove from selected groups                                     \
-      </button>                                                         \
-    </div>                                                              \
     <table class="table table-striped                                   \
                   table-bordered table-hover">                          \
       <thead>                                                           \
@@ -217,7 +212,9 @@ define(
     {{/restrictions.length}}                                            \
     {{#restrictions.length}}                                            \
     <div class="spaced">                                                \
-      <button class="btn btn-default disabled" role="button">           \
+      <button id="groups-delete-button"                                 \
+              class="btn btn-default disabled"                          \
+              role="button">                                            \
         Remove selected restrictions                                    \
       </button>                                                         \
     </div>                                                              \
@@ -298,6 +295,11 @@ define(
           </select>                                                     \
         </div>                                                          \
       </form>                                                           \
+      <div class="spaced">                                              \
+        <button class="btn btn-default disabled" role="button">         \
+          Remove from selected groups                                   \
+        </button>                                                       \
+      </div>                                                            \
     ';
 
     var groupEditor='                                                   \
