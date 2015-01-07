@@ -103,8 +103,7 @@ define(
       };
 
       this.renderGroupDisplay = function(ev, data){
-        var params = {"restrictions": [], "hint": true};
-        params["hint"] = JSON.stringify(data.response["hint"]);
+        var params = {"restrictions": []};
         for (var i in data.response["restrictions"]){
           var r = data.response.restrictions[i];
           params.restrictions.push({

@@ -251,13 +251,6 @@ define(
       <tbody>                                                           \
     </table>                                                            \
     {{/restrictions.length}}                                            \
-    <div class="page-header">                                           \
-      <h3>Json hint returned in case of success</h3>                    \
-    </div>                                                              \
-    <textarea class="form-control spaced">{{hint}}</textarea>           \
-    <button class="btn btn-default disabled" role="button">             \
-      Modify                                                            \
-    </button>                                                           \
     ';
 
     var restrictionDisplay='                                            \
