@@ -12,27 +12,44 @@ define(
 
       this.onUsersRendered = function(ev, data) {
         this.$node.html(data.markup);
-        this.$node
-          .find("#user-search-bar")
-          .val(decodeURIComponent(data.search));
-        this.$node
-          .find("#user-search-bar")
+        $("#user-search-bar").val(decodeURIComponent(data.search));
+        $("#user-search-bar")
           .on("input propertychange", { launcher: this },
             function(ev) {
               var searchedUser = $("#user-search-bar").val();
+              // check if user exists to (de)activate create button
               ev.data.launcher.trigger("dataShouldCheckIfUserExists",
                   {encodedUsername: encodeURIComponent(searchedUser)});
+              // look for users who have a similar name to filter results
               ev.data.launcher.trigger("dataShouldSearchUsers",
                   {search: encodeURIComponent(searchedUser)});
             });
-        this.$node
-          .find("#user-create-button")
+        $("#user-create-button")
           .on("click", { launcher: this },
             function(ev) {
               var username = $("#user-search-bar").val();
               ev.data.launcher.trigger("dataShouldPostUser",
                   {encodedUsername: encodeURIComponent(username)}
               );
+            });
+        $("#select-from-filter-checkbox")
+          .on("change", { launcher: this },
+            function(ev) {
+              var b = $( this ).prop("checked");
+              $(".user-select").prop("checked", b);
+              $("#select-all-checkbox").prop("checked", b).trigger("change");
+            });
+        $("#delete-user-button")
+          .on("click", { launcher: this },
+            function(ev) {
+              $(".user-select:checked")
+                .each(function(){
+                  var encodedUsername = $(this).attr("username");
+                  ev.data.launcher.trigger(window, "dataShouldDeleteUser",
+                      {encodedUsername: encodedUsername}
+                  );
+                });
+              ev.data.launcher.trigger(window, "hashchange");
             });
       };
 
@@ -92,6 +109,15 @@ define(
         }
       };
 
+      this.onUpdateUsersDeleteControls = function(ev, data){
+        if (ev.type == "uiShouldHideUsersDeleteControls") {
+          this.$node.find("#users-delete-controls").addClass("hidden");
+        }
+        if (ev.type == "uiShouldShowUsersDeleteControls") {
+          this.$node.find("#users-delete-controls").removeClass("hidden");
+        }
+      };
+
       this.after("initialize", function() {
         this.on("dataUsersEditorRendered", this.onUsersRendered);
         this.on("dataGroupsEditorRendered", this.onGroupsRendered);
@@ -103,6 +129,8 @@ define(
         this.on(window, "dataUserDoesNotExist", this.onUpdateUserCreateButton);
         this.on(window, "dataGroupExists", this.onUpdateGroupCreateButton);
         this.on(window, "dataGroupDoesNotExist", this.onUpdateGroupCreateButton);
+        this.on("uiShouldShowUsersDeleteControls", this.onUpdateUsersDeleteControls);
+        this.on("uiShouldHideUsersDeleteControls", this.onUpdateUsersDeleteControls);
       });
     }
   }

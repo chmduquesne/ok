@@ -28,20 +28,6 @@ define(
     <p class="text-center">No data</p>                                  \
     {{/users}}                                                          \
     {{#users.length}}                                                   \
-    <div class="spaced">                                                \
-      <form class="form-inline">                                        \
-        <button id="delete-user-button"                                 \
-          class="btn btn-default disabled"                              \
-          role="button">                                                \
-          Delete                                                        \
-        </button>                                                       \
-        <div class="checkbox">                                          \
-          <input id="select-from-filter-checkbox" type="checkbox">      \
-            All users matching the active filter                        \
-          </input>                                                      \
-        </div>                                                          \
-      </form>                                                           \
-    </div>                                                              \
     <table class="table table-striped                                   \
                   table-bordered table-hover">                          \
       <thead>                                                           \
@@ -128,17 +114,12 @@ define(
     ';
 
     var groupsDisplay='                                                 \
-    <div class="spaced">                                                \
-      <button class="btn btn-default disabled" role="button">           \
-        Delete                                                          \
-      </button>                                                         \
-    </div>                                                              \
     <table class="table table-striped                                   \
                   table-bordered table-hover">                          \
       <thead>                                                           \
         <tr>                                                            \
           <th class="xxs-col">                                          \
-            <input id="all-checkboxes" type="checkbox"/>                \
+            <input id="select-all-checkbox" type="checkbox"/>           \
           </th>                                                         \
           <th>group</th>                                                \
         </tr>                                                           \
@@ -147,7 +128,8 @@ define(
         {{#groups}}                                                     \
         <tr>                                                            \
           <td>                                                          \
-            <input type="checkbox" groupname={{encodedgroupname}}/>     \
+            <input class="group-select"                                 \
+                   type="checkbox" groupname={{encodedgroupname}}/>     \
           </td>                                                         \
           <td>                                                          \
             <a href="#groups/{{encodedgroupname}}">                     \
@@ -251,10 +233,10 @@ define(
     ';
 
     var restrictionDisplay='                                            \
-    <div class="page-header">                                           \
-      <h3>Description</h3>                                              \
-    </div>                                                              \
-    <pre>{{description}}</pre>                                          \
+      <div class="page-header">                                         \
+        <h3>Description</h3>                                            \
+      </div>                                                            \
+      <pre>{{description}}</pre>                                        \
     ';
 
     var usersEditor='                                                   \
@@ -267,6 +249,20 @@ define(
             Create                                                      \
           </button>                                                     \
         </span>                                                         \
+      </div>                                                            \
+      <div class="spaced">                                              \
+        <form id="users-delete-controls" class="form-inline hidden">    \
+          <button id="delete-user-button"                               \
+            class="btn btn-default"                                     \
+            role="button">                                              \
+            Delete                                                      \
+          </button>                                                     \
+          <div class="checkbox">                                        \
+            <input id="select-from-filter-checkbox" type="checkbox">    \
+              All users matching the active filter                      \
+            </input>                                                    \
+          </div>                                                        \
+        </form>                                                         \
       </div>                                                            \
     ';
 
@@ -281,6 +277,12 @@ define(
           </button>                                                     \
         </span>                                                         \
       </div>                                                            \
+    <div class="spaced">                                                \
+      <button id="groups-delete-button"                                 \
+              class="btn btn-default hidden" role="button">             \
+        Delete                                                          \
+      </button>                                                         \
+    </div>                                                              \
     ';
 
     var userEditor='                                                    \

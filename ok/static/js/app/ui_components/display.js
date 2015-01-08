@@ -12,32 +12,32 @@ define(
 
       this.onUsersRendered = function(ev, data) {
         this.$node.html(data.markup);
-        this.$node
-          .find("#select-all-checkbox")
-          .on("input propertychange", { launcher: this },
+        $("#select-all-checkbox")
+          .on("change",
             function(ev) {
-              /*TODO: check all slaves*/
-              $(".user-select");
+              var checked = $(this).prop("checked");
+              $(".user-select").prop("checked", checked);
             });
-        this.$node
-          .find("#select-from-filter-checkbox")
-          .on("input propertychange", { launcher: this },
+        $(":checkbox")
+          .on("change", { launcher: this },
             function(ev) {
-              /*TODO: check all slaves*/
-              $(".user-select");
-            });
-        this.$node
-          .find("#delete-user-button")
-          .on("click", { launcher: this },
-            function(ev) {
-              /*TODO: check all slaves*/
-              $(".user-select");
-              //ev.data.launcher.trigger("");
+              var evName = "uiShouldHideUsersDeleteControls";
+              if ($(":checkbox:checked").length > 0) {
+                evName = "uiShouldShowUsersDeleteControls";
+              }
+              ev.data.launcher.trigger("#editor", evName);
             });
       };
 
       this.onGroupsRendered = function(ev, data) {
         this.$node.html(data.markup);
+        this.$node
+          .find("#select-all-checkbox")
+          .on("change", { launcher: this },
+            function(ev) {
+              var b = $(this).prop("checked");
+              $(".group-select").prop("checked", b);
+            });
       };
 
       this.onRestrictionsRendered = function(ev, data){
