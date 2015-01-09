@@ -12,12 +12,14 @@ define(
 
       this.onUsersRendered = function(ev, data) {
         this.$node.html(data.markup);
+        // the master checkbox checks/unchecks the other checkboxes
         $("#select-all-checkbox")
           .on("change",
             function(ev) {
               var checked = $(this).prop("checked");
               $(".user-select").prop("checked", checked);
             });
+        // relevant controls appear when any checkbox is checked
         $(":checkbox")
           .on("change", { launcher: this },
             function(ev) {
@@ -31,29 +33,53 @@ define(
 
       this.onGroupsRendered = function(ev, data) {
         this.$node.html(data.markup);
-        this.$node
-          .find("#select-all-checkbox")
+        // the master checkbox checks/unchecks the other checkboxes
+        $("#select-all-checkbox")
           .on("change", { launcher: this },
             function(ev) {
-              var b = $(this).prop("checked");
-              $(".group-select").prop("checked", b);
+              var checked = $(this).prop("checked");
+              $(".group-select").prop("checked", checked);
+            });
+        // make relevant controls appear when any checkbox is checked
+        $(":checkbox")
+          .on("change", { launcher: this },
+            function(ev) {
+              var evName = "uiShouldHideGroupsDeleteControls";
+              if ($(":checkbox:checked").length > 0) {
+                evName = "uiShouldShowGroupsDeleteControls";
+              }
+              ev.data.launcher.trigger("#editor", evName);
             });
       };
 
       this.onRestrictionsRendered = function(ev, data){
-        this.$node.html(data.markup)
+        this.$node.html(data.markup);
       };
 
       this.onUserRendered = function(ev, data){
-        this.$node.html(data.markup)
+        this.$node.html(data.markup);
+        // the master checkbox checks/unchecks the other checkboxes
+        $("#select-all-checkbox")
+          .on("change", { launcher: this },
+            function(ev) {
+              var checked = $(this).prop("checked");
+              $(".group-select").prop("checked", checked);
+            });
       };
 
       this.onGroupRendered = function(ev, data){
-        this.$node.html(data.markup)
+        this.$node.html(data.markup);
+        // the master checkbox checks/unchecks the other checkboxes
+        $("#select-all-checkbox")
+          .on("change", { launcher: this },
+            function(ev) {
+              var checked = $(this).prop("checked");
+              $(".restriction-select").prop("checked", checked);
+            });
       };
 
       this.onRestrictionRendered = function(ev, data){
-        this.$node.html(data.markup)
+        this.$node.html(data.markup);
       };
 
       this.after("initialize", function() {

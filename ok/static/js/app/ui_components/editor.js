@@ -39,7 +39,7 @@ define(
               $(".user-select").prop("checked", b);
               $("#select-all-checkbox").prop("checked", b).trigger("change");
             });
-        $("#delete-user-button")
+        $("#users-delete-button")
           .on("click", { launcher: this },
             function(ev) {
               $(".user-select:checked")

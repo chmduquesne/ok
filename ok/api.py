@@ -26,7 +26,7 @@ app.config.update(dict(
     AUTO_CREATE=True,
     DEFAULT_GROUPS=["users"],
     ANONYMOUS_GROUPS=["anonymous"],
-    MAX_RESULTS=20,
+    MAX_RESULTS=10,
     DESCRIBER=lambda x: x
     ))
 

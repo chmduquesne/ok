@@ -168,15 +168,19 @@ define(
     <table class="table table-striped                                   \
                   table-bordered table-hover">                          \
       <thead>                                                           \
-          <tr>                                                          \
-              <th class="xxs-col"><input type="checkbox"/></th>         \
-              <th>groups</th>                                           \
-          </tr>                                                         \
+        <tr>                                                            \
+          <th class="xxs-col">                                          \
+            <input id="select-all-checkbox" type="checkbox"/>           \
+          </th>                                                         \
+          <th>                                                          \
+            groups                                                      \
+          </th>                                                         \
+        </tr>                                                           \
       </thead>                                                          \
       <tbody>                                                           \
       {{#groups}}                                                       \
         <tr>                                                            \
-          <td><input type="checkbox"/></td>                             \
+          <td><input class="group-select" type="checkbox"/></td>        \
           <td>                                                          \
             <a href="#groups/{{encodedgroupname}}">                     \
             {{groupname}}                                               \
@@ -190,21 +194,18 @@ define(
 
     var groupDisplay='                                                  \
     {{^restrictions.length}}                                            \
-    <p class="text-center">This group allows nothing</p>                \
+    <p class="text-center">                                             \
+      You need to specify restrictions for this group                   \
+    </p>                                                                \
     {{/restrictions.length}}                                            \
     {{#restrictions.length}}                                            \
-    <div class="spaced">                                                \
-      <button id="groups-delete-button"                                 \
-              class="btn btn-default disabled"                          \
-              role="button">                                            \
-        Remove selected restrictions                                    \
-      </button>                                                         \
-    </div>                                                              \
     <table class="table table-striped                                   \
                   table-bordered table-hover">                          \
       <thead>                                                           \
         <tr>                                                            \
-          <th class="xxs-col"><input type="checkbox"/></th>             \
+          <th class="xxs-col">                                          \
+            <input id="select-all-checkbox" type="checkbox"/>           \
+          </th>                                                         \
           <th>Path in the url</th>                                      \
           <th>Restriction to apply</th>                                 \
           <th>Parameters of the restriction</th>                        \
@@ -213,7 +214,7 @@ define(
       <tbody>                                                           \
       {{#restrictions}}                                                 \
       <tr>                                                              \
-        <td><input type="checkbox"/></td>                               \
+        <td><input class="restriction-select" type="checkbox"/></td>    \
         <td>                                                            \
           {{pattern}}                                                   \
         </td>                                                           \
@@ -252,7 +253,7 @@ define(
       </div>                                                            \
       <div class="spaced">                                              \
         <form id="users-delete-controls" class="form-inline hidden">    \
-          <button id="delete-user-button"                               \
+          <button id="users-delete-button"                              \
             class="btn btn-default"                                     \
             role="button">                                              \
             Delete                                                      \
@@ -328,6 +329,13 @@ define(
           </div>                                                        \
         </form>                                                         \
       </form>                                                           \
+      <div class="spaced">                                              \
+        <button id="groups-delete-button"                               \
+                class="btn btn-default disabled"                        \
+                role="button">                                          \
+          Remove selected restrictions                                  \
+        </button>                                                       \
+      </div>                                                            \
       ';
 
     var emptyEditor='';
