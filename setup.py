@@ -10,7 +10,8 @@ setup(
     install_requires=[
         "Flask >= 0.10",
         "kyotocabinet >= 1.9",
-        "pyxdg >= 0.25"
+        "pyxdg >= 0.25",
+        "persistentdicts >= 0.0.2"
         ],
     scripts=["ok-serve"],
     zip_safe=False,

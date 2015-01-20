@@ -9,7 +9,7 @@ import os
 import sys
 import json
 import re
-import serializeddicts
+import persistentdicts
 import werkzeug.datastructures
 import itertools
 
@@ -22,7 +22,7 @@ XDG_DATA_DIR = xdg.BaseDirectory.save_data_path(APP_NAME)
 
 app.config.update(dict(
     USERS_DB=os.path.join(XDG_DATA_DIR, "users.kch"),
-    GROUPS_DB=os.path.join(XDG_CONFIG_DIR, "groups.json"),
+    GROUPS_DB=os.path.join(XDG_DATA_DIR, "groups.kch"),
     AUTO_CREATE=True,
     DEFAULT_GROUPS=["users"],
     ANONYMOUS_GROUPS=["anonymous"],
@@ -69,7 +69,9 @@ def get_groups_db():
     necessary).
     """
     if not hasattr(flask.g, "groups_db"):
-        groups_db = serializeddicts.JsonDict(app.config["GROUPS_DB"])
+        groups_db = persistentdicts.kyotocabinetdict.KyotoCabinetDict(
+                app.config["GROUPS_DB"]
+                )
         groups_db["unrestricted"] = {
             "restrictions": [[".*", "unrestricted", None]]
             }
@@ -89,7 +91,7 @@ def get_users_db():
     necessary).
     """
     if not hasattr(flask.g, "users_db"):
-        flask.g.users_db = serializeddicts.KyotoCabinetDict(
+        flask.g.users_db = persistentdicts.kyotocabinetdict.KyotoCabinetDict(
             app.config["USERS_DB"]
             )
     return flask.g.users_db
