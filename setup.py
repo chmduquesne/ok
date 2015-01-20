@@ -9,7 +9,6 @@ setup(
     packages=["ok"],
     install_requires=[
         "Flask >= 0.10",
-        "kyotocabinet >= 1.9",
         "pyxdg >= 0.25",
         "persistentdicts >= 0.0.2"
         ],
