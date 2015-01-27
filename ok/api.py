@@ -69,7 +69,7 @@ def get_groups_db():
     necessary).
     """
     if not hasattr(flask.g, "groups_db"):
-        groups_db = persistentdicts.kyotocabinetdict.KyotoCabinetDict(
+        groups_db = persistentdicts.KyotoCabinetDict(
                 app.config["GROUPS_DB"]
                 )
         groups_db["unrestricted"] = {
@@ -91,7 +91,7 @@ def get_users_db():
     necessary).
     """
     if not hasattr(flask.g, "users_db"):
-        flask.g.users_db = persistentdicts.kyotocabinetdict.KyotoCabinetDict(
+        flask.g.users_db = persistentdicts.KyotoCabinetDict(
             app.config["USERS_DB"]
             )
     return flask.g.users_db

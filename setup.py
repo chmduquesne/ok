@@ -10,7 +10,7 @@ setup(
     install_requires=[
         "Flask >= 0.10",
         "pyxdg >= 0.25",
-        "persistentdicts >= 0.0.2"
+        "persistentdicts >= 1.0.0"
         ],
     scripts=["ok-serve"],
     zip_safe=False,
